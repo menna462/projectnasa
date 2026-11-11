@@ -1,0 +1,2816 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Abandoned but not Forgotten: Artifacts of Space Exploration | NASA Space Apps Challenge 2026</title>
+  
+  <!-- Meta SEO & Social Sharing -->
+  <meta name="description" content="An interactive 3D WebGL and tactical radar journey commemorating the historic rovers, landers, and descent stages abandoned across the Moon and Mars. Created for NASA Space Apps Challenge 2026.">
+  <meta name="theme-color" content="#030712">
+
+  <!-- Tailwind CSS Play CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            space: {
+              950: '#030712',
+              900: '#070f21',
+              850: '#0b162f',
+              800: '#112244',
+            },
+            cyan: {
+              400: '#22d3ee',
+              500: '#06b6d4',
+            },
+            mars: {
+              500: '#f97316',
+              600: '#ea580c',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts & Custom CSS -->
+  <style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Space+Grotesk:wght@300;400;600;700&family=JetBrains+Mono:wght@300;400;500;700&family=Cairo:wght@400;600;700;900&display=swap');
+
+/* Base Cosmic Variables */
+:root {
+  --bg-void: #030712;
+  --bg-deep: #080f1e;
+  --cyan-glow: #06b6d4;
+  --cyan-bright: #22d3ee;
+  --mars-orange: #f97316;
+  --mars-crimson: #ef4444;
+  --lunar-gold: #fbbf24;
+  --cosmic-purple: #a855f7;
+  --glass-bg: rgba(12, 22, 45, 0.65);
+  --glass-border: rgba(56, 189, 248, 0.25);
+  --glass-border-hover: rgba(56, 189, 248, 0.6);
+  --font-display: 'Orbitron', -apple-system, sans-serif;
+  --font-body: 'Space Grotesk', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-arabic: 'Cairo', sans-serif;
+}
+
+/* Global Reset & Base Styling */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--bg-void);
+  color: #f1f5f9;
+  font-family: var(--font-body);
+  overflow-x: hidden;
+  min-height: 100vh;
+  position: relative;
+  selection-background-color: var(--cyan-glow);
+  selection-color: #000;
+}
+
+/* Arabic RTL Mode Override */
+body[dir="rtl"] {
+  font-family: var(--font-arabic), var(--font-body);
+}
+
+body[dir="rtl"] .font-display {
+  font-family: var(--font-arabic), var(--font-display);
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #050b14;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+  border: 1px solid rgba(6, 182, 212, 0.2);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #0891b2;
+}
+
+/* Typography Utility Classes */
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: 0.05em;
+}
+
+.font-mono-hud {
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+}
+
+/* Background Canvas Layer */
+#starfield-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* CRT Scanline & Grain Texture Overlay */
+.crt-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 999;
+  pointer-events: none;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.25) 50%
+  ), linear-gradient(
+    90deg,
+    rgba(255, 0, 0, 0.02),
+    rgba(0, 255, 0, 0.01),
+    rgba(0, 0, 255, 0.02)
+  );
+  background-size: 100% 3px, 6px 100%;
+  opacity: 0.45;
+}
+
+/* High-tech Glassmorphism Panel */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45),
+              inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.glass-panel:hover {
+  border-color: var(--glass-border-hover);
+  box-shadow: 0 12px 40px 0 rgba(6, 182, 212, 0.15),
+              inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+}
+
+.glass-panel-mars {
+  background: rgba(30, 15, 15, 0.65);
+  border-color: rgba(249, 115, 22, 0.3);
+}
+
+.glass-panel-mars:hover {
+  border-color: rgba(249, 115, 22, 0.7);
+  box-shadow: 0 12px 40px 0 rgba(249, 115, 22, 0.2);
+}
+
+/* Corner Bracket Accents */
+.corner-brackets::before,
+.corner-brackets::after {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+.corner-brackets::before {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid var(--cyan-glow);
+  border-left: 2px solid var(--cyan-glow);
+}
+
+.corner-brackets::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid var(--cyan-glow);
+  border-right: 2px solid var(--cyan-glow);
+}
+
+.corner-brackets:hover::before,
+.corner-brackets:hover::after {
+  width: 16px;
+  height: 16px;
+}
+
+/* Glowing Text Animations */
+.glow-title {
+  text-shadow: 0 0 20px rgba(6, 182, 212, 0.6),
+               0 0 40px rgba(6, 182, 212, 0.3),
+               0 0 80px rgba(168, 85, 247, 0.2);
+}
+
+.glow-mars {
+  text-shadow: 0 0 20px rgba(249, 115, 22, 0.6),
+               0 0 40px rgba(239, 68, 68, 0.3);
+}
+
+/* Radar Sweep Line Animation */
+@keyframes radar-sweep {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-radar-sweep {
+  animation: radar-sweep 4s linear infinite;
+  transform-origin: center;
+}
+
+/* Pulse Wave Animations */
+@keyframes signal-ping {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  70% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+.signal-ping-ring {
+  animation: signal-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Sound Wave Equalizer Bars Animation */
+@keyframes soundwave {
+  0%, 100% { height: 4px; }
+  50% { height: 22px; }
+}
+
+.soundwave-bar:nth-child(1) { animation: soundwave 1s ease-in-out infinite 0.1s; }
+.soundwave-bar:nth-child(2) { animation: soundwave 0.8s ease-in-out infinite 0.3s; }
+.soundwave-bar:nth-child(3) { animation: soundwave 1.2s ease-in-out infinite 0.2s; }
+.soundwave-bar:nth-child(4) { animation: soundwave 0.9s ease-in-out infinite 0.4s; }
+.soundwave-bar:nth-child(5) { animation: soundwave 1.1s ease-in-out infinite 0.15s; }
+
+/* Subtle Hologram Glitch & Scanline */
+@keyframes holo-shimmer {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 0% 100%; }
+}
+
+.hologram-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.hologram-effect::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(6, 182, 212, 0.04) 51%
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+}
+
+/* Interactive 3D Planet Canvas Container */
+#planet-canvas-container {
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+
+#planet-canvas-container:active {
+  cursor: grabbing;
+}
+
+/* Modal Smooth Zoom Entrance */
+@keyframes modal-enter {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-animate-in {
+  animation: modal-enter 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Monospace Telemetry Grid */
+.telemetry-tag {
+  background: rgba(6, 182, 212, 0.1);
+  border: 1px solid rgba(6, 182, 212, 0.25);
+  color: #a5f3fc;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+</style>
+
+  <!-- Three.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body class="bg-[#030712] text-slate-100 antialiased selection:bg-cyan-500 selection:text-black">
+
+  <!-- CRT Scanline Overlay -->
+  <div class="crt-overlay"></div>
+
+  <!-- Deep Space Canvas Background -->
+  <canvas id="starfield-canvas"></canvas>
+
+  <!-- ======================================================== -->
+  <!-- 1. NAVIGATION & TOP HUD TELEMETRY BAR                    -->
+  <!-- ======================================================== -->
+  <header class="fixed top-0 left-0 right-0 z-50 bg-[#030712]/80 backdrop-blur-md border-b border-cyan-500/20 px-4 lg:px-8 py-3 transition-all duration-300">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      
+      <!-- NASA Space Apps Branding -->
+      <div class="flex items-center gap-3">
+        <div class="relative flex items-center justify-center w-10 h-10 rounded-xl bg-cyan-950 border border-cyan-400/40 shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+          <span class="text-xl">🚀</span>
+          <span class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-mono-hud text-cyan-400 tracking-wider font-semibold">NASA SPACE APPS 2026</span>
+            <span class="text-[10px] font-mono-hud px-1.5 py-0.2 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">CHALLENGE</span>
+          </div>
+          <h1 class="text-sm font-display font-bold tracking-wide text-white uppercase" data-i18n-en="Abandoned but not Forgotten" data-i18n-ar="متروكة… لكن مش منسية">
+            Abandoned but not Forgotten
+          </h1>
+        </div>
+      </div>
+
+      <!-- Quick Nav Links -->
+      <nav class="hidden md:flex items-center gap-6 font-mono-hud text-xs text-slate-300">
+        <a href="#hero-section" class="hover:text-cyan-400 transition-colors flex items-center gap-1.5" data-i18n-en="[ 3D PLANETS ]" data-i18n-ar="[ الكواكب 3D ]">[ 3D PLANETS ]</a>
+        <a href="#radar-section" class="hover:text-cyan-400 transition-colors flex items-center gap-1.5" data-i18n-en="[ RADAR SCANNER ]" data-i18n-ar="[ ماسح الرادار ]">[ RADAR SCANNER ]</a>
+        <a href="#artifacts-section" class="hover:text-cyan-400 transition-colors flex items-center gap-1.5" data-i18n-en="[ ARTIFACTS ]" data-i18n-ar="[ الآثار الفضائية ]">[ ARTIFACTS ]</a>
+        <a href="#nasa-archive-section" class="hover:text-cyan-400 transition-colors flex items-center gap-1.5" data-i18n-en="[ NASA ARCHIVES ]" data-i18n-ar="[ أرشيف ناسا ]">[ NASA ARCHIVES ]</a>
+      </nav>
+
+      <!-- Mission Control Controls -->
+      <div class="flex items-center gap-3">
+        <!-- Live UTC Mission Clock -->
+        <div class="hidden xl:flex flex-col text-right font-mono-hud text-[11px] text-slate-400 pr-3 border-r border-slate-800">
+          <span class="text-slate-500 text-[9px]">MISSION TIME (UTC)</span>
+          <span id="utc-mission-clock" class="text-cyan-300">2026-11-06 00:00:00 UTC</span>
+        </div>
+
+        <!-- Space Ambient & Radio Audio Toggle Button -->
+        <button 
+          id="audio-toggle-btn"
+          class="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-slate-900/90 border border-slate-700 hover:border-cyan-400 text-xs font-mono-hud text-slate-200 transition-all duration-300 shadow-md group"
+          title="Toggle Space Ambient Audio & Voiceover Sound Engine"
+        >
+          <span id="audio-icon" class="text-sm">🔇</span>
+          <span id="audio-label" class="hidden sm:inline font-bold" data-i18n-en="AUDIO: OFF" data-i18n-ar="الصوت: معطل">AUDIO: OFF</span>
+          
+          <!-- Soundwave Animation Indicator -->
+          <div id="audio-visualizer-bars" class="flex items-end gap-0.5 h-3 opacity-0 transition-opacity">
+            <span class="soundwave-bar w-0.5 bg-cyan-400 rounded-full"></span>
+            <span class="soundwave-bar w-0.5 bg-cyan-400 rounded-full"></span>
+            <span class="soundwave-bar w-0.5 bg-cyan-400 rounded-full"></span>
+            <span class="soundwave-bar w-0.5 bg-cyan-400 rounded-full"></span>
+            <span class="soundwave-bar w-0.5 bg-cyan-400 rounded-full"></span>
+          </div>
+        </button>
+
+        <!-- Bilingual Language Toggle -->
+        <button 
+          id="lang-toggle-btn" 
+          onclick="toggleLanguage()"
+          class="px-3 py-2 rounded-xl bg-slate-900/90 border border-slate-700 hover:border-cyan-400 text-xs font-mono-hud text-cyan-300 font-bold transition-all"
+        >
+          العربية 🌐
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ======================================================== -->
+  <!-- 2. HERO SECTION: INTERACTIVE 3D PLANET PREVIEW           -->
+  <!-- ======================================================== -->
+  <section id="hero-section" class="relative min-h-screen pt-28 pb-16 flex flex-col justify-between overflow-hidden z-10">
+    
+    <!-- Hero Header & Glowing Animated Title -->
+    <div class="max-w-5xl mx-auto px-4 text-center mt-4">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-mono-hud mb-4 uppercase tracking-widest">
+        <span>🛰️</span>
+        <span data-i18n-en="NASA SPACE APPS CHALLENGE // CATEGORY: ARTIFACTS OF SPACE EXPLORATION" data-i18n-ar="تحدي تطبيقات الفضاء من ناسا // فئة: آثار استكشاف الفضاء">
+          NASA SPACE APPS CHALLENGE // CATEGORY: ARTIFACTS OF SPACE EXPLORATION
+        </span>
+      </div>
+
+      <h1 class="text-3xl sm:text-5xl lg:text-6xl font-display font-black text-white glow-title uppercase tracking-tight leading-tight mb-4" data-i18n-en="Abandoned but not Forgotten: Artifacts of Space Exploration" data-i18n-ar="متروكة… لكن مش منسية: آثار استكشاف الفضاء">
+        Abandoned but not Forgotten: <br class="hidden sm:inline">
+        <span class="bg-gradient-to-r from-cyan-400 via-sky-200 to-purple-400 bg-clip-text text-transparent">Artifacts of Space Exploration</span>
+      </h1>
+
+      <p class="max-w-3xl mx-auto text-slate-300 text-sm sm:text-base lg:text-lg leading-relaxed font-light" data-i18n-en="Centuries from now, the first monuments of human civilization beyond Earth will still stand in the silent dust. Interact with the 3D celestial bodies below to inspect the solitary sentinels left on the Moon and Mars." data-i18n-ar="بعد قرون من الآن، ستظل أولى آثار الحضارة البشرية خارج الأرض صامدة في الغبار الساكن. تفاعل مع الأجرام السماوية ثلاثية الأبعاد أدناه لاكتشاف المعدات والمركبات التي أضاءت طريق استكشاف الفضاء.">
+        Centuries from now, the first monuments of human civilization beyond Earth will still stand in the silent dust. Interact with the 3D celestial bodies below to inspect the solitary sentinels left on the Moon and Mars.
+      </p>
+
+      <!-- Celestial Target Switcher Controls -->
+      <div class="flex items-center justify-center gap-4 mt-8">
+        <button 
+          id="btn-target-moon"
+          class="px-6 py-3 rounded-2xl bg-cyan-500/30 border-2 border-cyan-400 text-cyan-300 font-display font-bold text-sm tracking-wider shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all flex items-center gap-2 group"
+        >
+          <span class="text-xl group-hover:scale-125 transition-transform">🌕</span>
+          <span data-i18n-en="THE MOON (LUNA)" data-i18n-ar="القمر (لونا)">THE MOON (LUNA)</span>
+        </button>
+
+        <button 
+          id="btn-target-mars"
+          class="px-6 py-3 rounded-2xl bg-slate-900 border-2 border-slate-700 text-slate-400 hover:border-orange-500/80 hover:text-orange-300 font-display font-bold text-sm tracking-wider transition-all flex items-center gap-2 group"
+        >
+          <span class="text-xl group-hover:scale-125 transition-transform">🔴</span>
+          <span data-i18n-en="MARS (ARES)" data-i18n-ar="المريخ (آريس)">MARS (ARES)</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 3D Three.js Globe Interactive Viewport -->
+    <div class="relative w-full max-w-6xl mx-auto my-6 px-4 flex-1 flex flex-col items-center justify-center min-h-[460px] lg:min-h-[540px]">
+      
+      <!-- Planet Three.js Canvas Container -->
+      <div id="planet-canvas-container" class="relative w-full h-[450px] lg:h-[520px] rounded-3xl overflow-hidden glass-panel border border-cyan-500/20">
+        
+        <!-- Live 3D Hotspot Hover Tooltip -->
+        <div id="planet-hotspot-tooltip" class="absolute pointer-events-none hidden z-30 p-3 rounded-xl bg-slate-950/90 border border-cyan-400 backdrop-blur-md shadow-xl text-left max-w-xs transition-all duration-75">
+          <!-- Populated by JavaScript -->
+        </div>
+
+        <!-- 3D Interactive Interaction Guide Hint -->
+        <div class="absolute top-4 left-4 z-20 pointer-events-none flex items-center gap-2 text-[10px] font-mono-hud text-cyan-300 bg-slate-950/70 border border-cyan-500/30 px-3 py-1.5 rounded-full backdrop-blur-sm">
+          <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+          <span data-i18n-en="DRAG TO ROTATE 3D CELESTIAL GLOBE • CLICK BEACONS TO INSPECT" data-i18n-ar="اسحب لتدوير الكوكب ثلاثي الأبعاد • انقر على الإشارات للفحص">
+            DRAG TO ROTATE 3D CELESTIAL GLOBE • CLICK BEACONS TO INSPECT
+          </span>
+        </div>
+
+        <!-- Real-time HUD Telemetry Overlays (Corners) -->
+        <div class="absolute bottom-4 left-4 right-4 z-20 flex flex-wrap items-end justify-between gap-4 pointer-events-none">
+          
+          <!-- Target Overview Card -->
+          <div class="glass-panel corner-brackets p-4 rounded-xl border border-cyan-500/30 max-w-xs pointer-events-auto">
+            <div class="text-[9px] font-mono-hud text-cyan-400 uppercase tracking-wider mb-1" data-i18n-en="TARGET CELESTIAL BODY" data-i18n-ar="الجرم السماوي المستهدف">TARGET CELESTIAL BODY</div>
+            <h3 id="hud-target-name" class="text-xl font-display font-bold text-white">The Moon (Luna)</h3>
+            <p id="hud-target-sub" class="text-xs text-slate-400 font-mono-hud mt-0.5">Earth's Only Natural Satellite</p>
+            
+            <div class="mt-3 pt-2 border-t border-slate-800 grid grid-cols-2 gap-2 text-[10px] font-mono-hud">
+              <div>
+                <span class="text-slate-500 block" data-i18n-en="DISTANCE" data-i18n-ar="المسافة">DISTANCE</span>
+                <span id="hud-distance" class="text-slate-200 font-semibold">384,400 km</span>
+              </div>
+              <div>
+                <span class="text-slate-500 block" data-i18n-en="GRAVITY" data-i18n-ar="الجاذبية">GRAVITY</span>
+                <span id="hud-gravity" class="text-slate-200 font-semibold">1.62 m/s² (0.166 g)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Environment & Hardware Telemetry Card -->
+          <div class="glass-panel corner-brackets p-4 rounded-xl border border-cyan-500/30 max-w-xs text-right pointer-events-auto">
+            <div class="text-[9px] font-mono-hud text-cyan-400 uppercase tracking-wider mb-1" data-i18n-en="SURFACE ENVIRONMENT" data-i18n-ar="البيئة السطحية">SURFACE ENVIRONMENT</div>
+            <div class="text-xs font-mono-hud text-slate-300">
+              <span class="text-slate-500" data-i18n-en="TEMP: " data-i18n-ar="الحرارة: ">TEMP: </span>
+              <span id="hud-temp" class="text-amber-300 font-semibold">-130°C to +120°C</span>
+            </div>
+            <div class="text-xs font-mono-hud text-slate-300 mt-1">
+              <span class="text-slate-500" data-i18n-en="ATMOSPHERE: " data-i18n-ar="الغلاف الجوي: ">ATMOSPHERE: </span>
+              <span id="hud-atmosphere" class="text-cyan-300 font-semibold">Ultra-High Vacuum</span>
+            </div>
+            <div class="mt-2 pt-2 border-t border-slate-800 text-[10px] font-mono-hud text-slate-300">
+              <span class="text-slate-500 block" data-i18n-en="ABANDONED HARDWARE:" data-i18n-ar="المعدات المتروكة:">ABANDONED HARDWARE:</span>
+              <span id="hud-artifacts-count" class="text-cyan-400 font-bold">74+ Documented Missions (~200,000 kg)</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Scroll Down CTA -->
+    <div class="text-center mt-4">
+      <a 
+        href="#radar-section" 
+        class="inline-flex flex-col items-center gap-1 font-mono-hud text-xs text-cyan-400 hover:text-cyan-300 transition-colors group"
+      >
+        <span class="tracking-widest uppercase font-semibold" data-i18n-en="ENGAGE TACTICAL SURFACE RADAR" data-i18n-ar="تشغيل رادار المسح السطحي">ENGAGE TACTICAL SURFACE RADAR</span>
+        <span class="text-lg animate-bounce">↓</span>
+      </a>
+    </div>
+
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- 3. INTERACTIVE ARTIFACT RADAR SURFACE SCANNER            -->
+  <!-- ======================================================== -->
+  <section id="radar-section" class="relative py-24 px-4 max-w-7xl mx-auto z-10">
+    
+    <div class="text-center max-w-3xl mx-auto mb-12">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-mono-hud mb-3 uppercase tracking-wider">
+        <span>📡</span>
+        <span data-i18n-en="DEEP SURFACE INTERCEPT // RADAR TELEMETRY" data-i18n-ar="اعتراض الإشارات السطحية // رادار التتبع">
+          DEEP SURFACE INTERCEPT // RADAR TELEMETRY
+        </span>
+      </div>
+
+      <h2 class="text-3xl sm:text-4xl font-display font-black text-white glow-title uppercase tracking-wide mb-3" data-i18n-en="Lunar & Martian Surface Radar" data-i18n-ar="رادار مسح سطح القمر والمريخ">
+        Lunar & Martian Surface Radar
+      </h2>
+
+      <p class="text-slate-300 text-sm sm:text-base font-light" data-i18n-en="Sweeping the topography for abandoned hardware. Pulsing signal pins represent landing sites and rover traverses. Hover or click any hotspot to intercept historical telemetry." data-i18n-ar="مسح طبوغرافي لسطح الأجرام الفضائية لرصد المعدات المتروكة. تمثل النقاط المضيئة مواقع الهبوط ومسارات العربات. انقر على أي نقطة لفحص السجل الكامل.">
+        Sweeping the topography for abandoned hardware. Pulsing signal pins represent landing sites and rover traverses. Hover or click any hotspot to intercept historical telemetry.
+      </p>
+
+      <!-- Radar Filter Pills -->
+      <div class="flex flex-wrap items-center justify-center gap-2 mt-6">
+        <button 
+          class="radar-filter-pill active px-4 py-2 rounded-full border border-cyan-400 bg-cyan-500/20 text-cyan-300 text-xs font-mono-hud font-bold transition-all shadow-[0_0_12px_rgba(6,182,212,0.2)]"
+          data-filter="all"
+          data-i18n-en="ALL TARGETS (9)"
+          data-i18n-ar="جميع الأهداف (9)"
+        >
+          ALL TARGETS (9)
+        </button>
+        <button 
+          class="radar-filter-pill px-4 py-2 rounded-full border border-slate-800 text-slate-400 hover:border-cyan-400 hover:text-cyan-300 text-xs font-mono-hud font-bold transition-all"
+          data-filter="moon"
+          data-i18n-en="LUNAR RELICS 🌕"
+          data-i18n-ar="آثار القمر 🌕"
+        >
+          LUNAR RELICS 🌕
+        </button>
+        <button 
+          class="radar-filter-pill px-4 py-2 rounded-full border border-slate-800 text-slate-400 hover:border-orange-500 hover:text-orange-300 text-xs font-mono-hud font-bold transition-all"
+          data-filter="mars"
+          data-i18n-en="MARTIAN ARTIFACTS 🔴"
+          data-i18n-ar="آثار المريخ 🔴"
+        >
+          MARTIAN ARTIFACTS 🔴
+        </button>
+        <button 
+          class="radar-filter-pill px-4 py-2 rounded-full border border-slate-800 text-slate-400 hover:border-purple-500 hover:text-purple-300 text-xs font-mono-hud font-bold transition-all"
+          data-filter="deep-space"
+          data-i18n-en="DEEP SPACE 🚀"
+          data-i18n-ar="الفضاء السحيق 🚀"
+        >
+          DEEP SPACE 🚀
+        </button>
+      </div>
+    </div>
+
+    <!-- Radar HUD Scanner Main Frame -->
+    <div class="relative glass-panel corner-brackets p-6 sm:p-8 rounded-3xl max-w-4xl mx-auto border border-cyan-500/30 flex flex-col items-center shadow-[0_0_50px_rgba(6,182,212,0.1)]">
+      
+      <!-- Top HUD Header Strip -->
+      <div class="w-full flex flex-wrap items-center justify-between gap-4 pb-4 mb-6 border-b border-slate-800 text-xs font-mono-hud">
+        <div class="flex items-center gap-3">
+          <span class="w-3 h-3 rounded-full bg-cyan-400 animate-ping"></span>
+          <span class="text-cyan-300 font-bold uppercase" data-i18n-en="SCANNER FREQ: 1420.405 MHz [HYDROGEN LINE]" data-i18n-ar="تردد المسح: 1420.405 ميجاهرتز [خط الهيدروجين]">
+            SCANNER FREQ: 1420.405 MHz [HYDROGEN LINE]
+          </span>
+        </div>
+
+        <div id="radar-live-coords" class="text-slate-400">
+          RADAR RETICLE: LAT 00.00° | LON 00.00°
+        </div>
+
+        <!-- Radar Zoom Controls -->
+        <div class="flex items-center gap-1.5">
+          <button id="radar-zoom-out" class="w-7 h-7 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center font-bold text-sm border border-slate-700" title="Zoom Out">−</button>
+          <button id="radar-zoom-reset" class="px-2 h-7 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-mono-hud border border-slate-700">1.0x</button>
+          <button id="radar-zoom-in" class="w-7 h-7 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center font-bold text-sm border border-slate-700" title="Zoom In">+</button>
+        </div>
+      </div>
+
+      <!-- Radar Canvas & Compass Frame -->
+      <div class="relative flex items-center justify-center p-4">
+        <!-- Compass Azimuth Indicators -->
+        <div class="absolute -top-1 font-mono-hud text-[10px] text-cyan-400/80 font-bold tracking-widest">000° NORTH</div>
+        <div class="absolute -bottom-1 font-mono-hud text-[10px] text-cyan-400/80 font-bold tracking-widest">180° SOUTH</div>
+        <div class="absolute -left-3 font-mono-hud text-[10px] text-cyan-400/80 font-bold tracking-widest -rotate-90">270° WEST</div>
+        <div class="absolute -right-3 font-mono-hud text-[10px] text-cyan-400/80 font-bold tracking-widest rotate-90">090° EAST</div>
+
+        <!-- The Radar Canvas -->
+        <canvas id="radar-canvas" class="rounded-full shadow-[0_0_40px_rgba(6,182,212,0.15)] border-2 border-cyan-500/40"></canvas>
+      </div>
+
+      <!-- Bottom HUD Status Readout -->
+      <div class="w-full mt-6 pt-4 border-t border-slate-800 flex flex-wrap items-center justify-between text-[11px] font-mono-hud text-slate-400 gap-4">
+        <div class="flex items-center gap-4">
+          <span class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-cyan-400"></span> Moon (Luna)
+          </span>
+          <span class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-orange-500"></span> Mars (Ares)
+          </span>
+          <span class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-purple-500"></span> Interstellar
+          </span>
+        </div>
+        <div class="text-cyan-400 font-semibold" data-i18n-en="CLICK ANY PIN TO OPEN INTERCEPT DOSSIER" data-i18n-ar="انقر على أي نقطة لفتح ملف السجل">
+          CLICK ANY PIN TO OPEN INTERCEPT DOSSIER
+        </div>
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- 4. ARTIFACTS DOSSIER CATALOG (INTERACTIVE STORY CARDS)    -->
+  <!-- ======================================================== -->
+  <section id="artifacts-section" class="relative py-24 px-4 max-w-7xl mx-auto z-10">
+    
+    <div class="text-center max-w-3xl mx-auto mb-16">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-mono-hud mb-3 uppercase tracking-wider">
+        <span>📜</span>
+        <span data-i18n-en="PERSONIFIED MEMOIRS // HISTORICAL DOSSIERS" data-i18n-ar="مذكرات الآلات // السجلات التاريخية">
+          PERSONIFIED MEMOIRS // HISTORICAL DOSSIERS
+        </span>
+      </div>
+
+      <h2 class="text-3xl sm:text-4xl font-display font-black text-white glow-title uppercase tracking-wide mb-3" data-i18n-en="Echoes of Forgotten Machines" data-i18n-ar="أصداء الآلات المنسية">
+        Echoes of Forgotten Machines
+      </h2>
+
+      <p class="text-slate-300 text-sm sm:text-base font-light" data-i18n-en="Hear the heartfelt stories of rovers and landers that completed their missions and now rest as humanity's eternal monuments across the solar system." data-i18n-ar="استمع إلى القصص المؤثرة للمركبات والمجسات التي أنجزت مهامها وترقد الآن كنصب تذكارية أبدية للحضارة البشرية عبر النظام الشمسي.">
+        Hear the heartfelt stories of rovers and landers that completed their missions and now rest as humanity's eternal monuments across the solar system.
+      </p>
+    </div>
+
+    <!-- Artifacts Dynamic Cards Grid -->
+    <div id="artifacts-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <!-- Populated dynamically via JavaScript with high-tech glassmorphic cards -->
+    </div>
+
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- 5. LIVE NASA OPEN ARCHIVE SEARCH TERMINAL                -->
+  <!-- ======================================================== -->
+  <section id="nasa-archive-section" class="relative py-24 px-4 max-w-7xl mx-auto z-10 border-t border-slate-800">
+    
+    <div class="text-center max-w-3xl mx-auto mb-12">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-mono-hud mb-3 uppercase tracking-wider">
+        <span>🌐</span>
+        <span data-i18n-en="LIVE NASA API UPLINK // OPEN SCIENTIFIC ARCHIVES" data-i18n-ar="اتصال مباشر بأرشيف ناسا // البيانات العلمية المفتوحة">
+          LIVE NASA API UPLINK // OPEN SCIENTIFIC ARCHIVES
+        </span>
+      </div>
+
+      <h2 class="text-3xl sm:text-4xl font-display font-black text-white glow-title uppercase tracking-wide mb-3" data-i18n-en="Query NASA Open Imagery Vault" data-i18n-ar="ابحث في مستودع صور وكالة ناسا المفتوح">
+        Query NASA Open Imagery Vault
+      </h2>
+
+      <p class="text-slate-300 text-sm sm:text-base font-light" data-i18n-en="Direct satellite downlink to the official NASA Image & Video Library. Search any rover, mission, or artifact to inspect authenticated space exploration photographs." data-i18n-ar="اتصال مباشر بمكتبة الصور والفيديوهات الرسمية لوكالة ناسا. ابحث عن أي مركبة أو مهمة للاطلاع على الصور الفوتوغرافية الأصلية.">
+        Direct satellite downlink to the official NASA Image & Video Library. Search any rover, mission, or artifact to inspect authenticated space exploration photographs.
+      </p>
+
+      <!-- Search Input HUD Form -->
+      <form onsubmit="event.preventDefault(); searchNasaApi();" class="mt-8 max-w-2xl mx-auto flex items-center gap-2">
+        <div class="relative flex-1">
+          <input 
+            id="nasa-search-input"
+            type="text" 
+            placeholder="Search NASA Archives (e.g., lunar roving vehicle, Opportunity rover, Apollo 11...)" 
+            class="w-full px-5 py-3.5 rounded-2xl bg-slate-900/90 border border-cyan-500/40 text-slate-100 placeholder-slate-500 text-sm font-mono-hud focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 shadow-inner"
+          />
+          <button 
+            type="submit" 
+            class="absolute right-2 top-2 bottom-2 px-5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-display font-bold text-xs uppercase tracking-wider transition-colors flex items-center gap-1.5"
+          >
+            <span>SEARCH</span> 🔍
+          </button>
+        </div>
+      </form>
+
+      <!-- Quick Search Preset Chips -->
+      <div class="flex flex-wrap items-center justify-center gap-2 mt-4 text-xs font-mono-hud">
+        <span class="text-slate-500" data-i18n-en="TELEMETRY PRESETS:" data-i18n-ar="نماذج سريعة:">TELEMETRY PRESETS:</span>
+        <button onclick="searchNasaApi('Apollo 11 descent stage')" class="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-300 border border-slate-700">Apollo 11</button>
+        <button onclick="searchNasaApi('lunar roving vehicle')" class="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-300 border border-slate-700">Lunar Rover</button>
+        <button onclick="searchNasaApi('Opportunity rover Mars')" class="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-orange-500/20 text-slate-300 hover:text-orange-300 border border-slate-700">Opportunity</button>
+        <button onclick="searchNasaApi('Viking 1 lander')" class="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-orange-500/20 text-slate-300 hover:text-orange-300 border border-slate-700">Viking 1</button>
+        <button onclick="searchNasaApi('Voyager golden record')" class="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-purple-500/20 text-slate-300 hover:text-purple-300 border border-slate-700">Voyager Record</button>
+        <button onclick="searchNasaApi('Surveyor 3 Apollo 12')" class="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-300 border border-slate-700">Surveyor 3</button>
+      </div>
+
+      <!-- Live Search Status Readout -->
+      <div id="nasa-search-status" class="mt-4 font-mono-hud text-xs text-cyan-400">
+        <!-- Status populated via JS -->
+      </div>
+    </div>
+
+    <!-- NASA Search Results Holographic Grid -->
+    <div id="nasa-results-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <!-- Dynamic NASA API results loaded here -->
+    </div>
+
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- 6. PLANETARY HERITAGE MANIFESTO & FOOTER                 -->
+  <!-- ======================================================== -->
+  <footer class="relative z-10 bg-slate-950 border-t border-cyan-500/20 pt-16 pb-12 px-4">
+    <div class="max-w-7xl mx-auto">
+      
+      <!-- Manifesto Box -->
+      <div class="glass-panel corner-brackets p-8 rounded-3xl border border-cyan-500/30 max-w-4xl mx-auto text-center mb-16 shadow-[0_0_30px_rgba(6,182,212,0.1)]">
+        <span class="text-3xl mb-3 inline-block">🕊️</span>
+        <h3 class="text-2xl font-display font-bold text-white mb-3 uppercase" data-i18n-en="Why Planetary Heritage Preservation Matters" data-i18n-ar="لماذا يجب الحفاظ على التراث الفضائي الإنساني؟">
+          Why Planetary Heritage Preservation Matters
+        </h3>
+        <p class="text-slate-300 text-sm sm:text-base leading-relaxed font-light mb-6" data-i18n-en="These rovers and landers are not junk—they are archaeological monuments representing the highest reach of human courage and ingenuity. Under international space treaties and initiatives like the One Small Step Act, preserving these silent artifacts ensures that future generations will always know where our journey into the cosmos began." data-i18n-ar="هذه المركبات والمعدات ليست حطاماً، بل هي آثار تاريخية ونصب تذكارية تمثل قمة الشجاعة والإبداع البشري. إن حمايتها وصونها يضمن للأجيال القادمة أن تتذكر دائماً أين بدأت رحلة الإنسانية نحو النجوم.">
+          These rovers and landers are not junk—they are archaeological monuments representing the highest reach of human courage and ingenuity. Under international space treaties and initiatives like the One Small Step Act, preserving these silent artifacts ensures that future generations will always know where our journey into the cosmos began.
+        </p>
+        <div class="inline-flex items-center gap-2 text-xs font-mono-hud text-cyan-400 border border-cyan-500/40 px-4 py-1.5 rounded-full bg-cyan-500/10">
+          <span>🏛️</span>
+          <span data-i18n-en="PROTECTING TRANQUILITY BASE, HADLEY RILLE, & ENDEAVOUR CRATER" data-i18n-ar="حماية قاعدة الهدوء ووادي هادلي وفوهة إنديفور">
+            PROTECTING TRANQUILITY BASE, HADLEY RILLE, & ENDEAVOUR CRATER
+          </span>
+        </div>
+      </div>
+
+      <!-- Footer Bottom Links & Credits -->
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-6 pt-8 border-t border-slate-800 text-xs font-mono-hud text-slate-400">
+        <div>
+          <p>© 2026 NASA Space Apps Challenge // <span class="text-white font-bold">Abandoned but not Forgotten</span></p>
+          <p class="text-slate-500 mt-1">Built with Three.js WebGL, Web Audio API Synthesizer, & NASA Images Open API.</p>
+        </div>
+
+        <div class="flex items-center gap-6">
+          <a href="https://images.nasa.gov" target="_blank" rel="noopener noreferrer" class="hover:text-cyan-400 transition-colors">NASA Open API</a>
+          <a href="https://www.spaceappschallenge.org" target="_blank" rel="noopener noreferrer" class="hover:text-cyan-400 transition-colors">Space Apps Challenge</a>
+          <a href="#hero-section" class="text-cyan-400 hover:text-cyan-300 font-bold">BACK TO TOP ↑</a>
+        </div>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- ======================================================== -->
+  <!-- 7. GLASSMORPHIC ARTIFACT DOSSIER MODAL OVERLAY           -->
+  <!-- ======================================================== -->
+  <div 
+    id="artifact-modal" 
+    class="fixed inset-0 z-50 hidden items-center justify-center p-4 sm:p-6 bg-slate-950/80 backdrop-blur-xl transition-all"
+    onclick="if(event.target === this) closeArtifactModal()"
+  >
+    <div 
+      id="modal-card" 
+      class="glass-panel corner-brackets max-w-4xl w-full max-h-[92vh] overflow-y-auto rounded-3xl border border-cyan-500/40 p-6 sm:p-8 relative shadow-[0_0_60px_rgba(6,182,212,0.25)] flex flex-col justify-between"
+    >
+      
+      <!-- Modal Top Bar -->
+      <div class="flex items-center justify-between pb-4 mb-6 border-b border-slate-800">
+        <div class="flex items-center gap-3">
+          <span id="modal-target-badge" class="text-xs font-mono-hud uppercase px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 font-bold">
+            THE MOON 🌕
+          </span>
+          <span id="modal-mission" class="text-xs font-mono-hud text-slate-400">
+            APOLLO 17
+          </span>
+        </div>
+
+        <button 
+          onclick="closeArtifactModal()" 
+          class="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white flex items-center justify-center font-bold text-lg border border-slate-700 transition-colors"
+          title="Close Dossier"
+        >
+          ✕
+        </button>
+      </div>
+
+      <!-- Main Modal Split Layout -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        
+        <!-- Left Column: Image & Telemetry Badges -->
+        <div>
+          <!-- High-Res Photograph Frame -->
+          <div class="relative w-full h-64 sm:h-80 rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 shadow-lg group">
+            <img 
+              id="modal-image" 
+              src="" 
+              alt="NASA Artifact" 
+              class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            />
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-60"></div>
+            
+            <!-- Direct NASA Archive Button -->
+            <a 
+              id="modal-nasa-link" 
+              href="#" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              class="absolute bottom-3 right-3 px-3 py-1.5 rounded-xl bg-slate-950/80 hover:bg-cyan-500 text-white hover:text-black font-mono-hud text-xs border border-cyan-400/40 transition-all flex items-center gap-1.5 backdrop-blur-md"
+            >
+              <span>🏛️ NASA ARCHIVE</span> ↗
+            </a>
+          </div>
+
+          <!-- Time Abandoned Counter HUD -->
+          <div class="mt-4 p-4 rounded-xl bg-slate-900/60 border border-slate-800 font-mono-hud text-xs text-slate-300">
+            <div class="text-[10px] text-cyan-400 uppercase tracking-wider mb-1" data-i18n-en="ABANDONED TIME ON SURFACE" data-i18n-ar="الوقت المنقضي في سكون الفضاء">
+              ABANDONED TIME ON SURFACE
+            </div>
+            <div id="modal-time-elapsed" class="text-amber-300 font-bold text-sm">
+              55y 108d 14h 22m 11s resting in cosmic silence
+            </div>
+          </div>
+
+          <!-- Legal / Heritage Protection -->
+          <div class="mt-3 p-3 rounded-xl bg-cyan-950/20 border border-cyan-500/20 font-mono-hud text-[11px] text-cyan-300/80 flex items-start gap-2">
+            <span>🛡️</span>
+            <span id="modal-heritage">Protected under international space heritage preservation guidelines.</span>
+          </div>
+        </div>
+
+        <!-- Right Column: Personified Quote & Telemetry Specifications -->
+        <div>
+          <h2 id="modal-title" class="text-2xl sm:text-3xl font-display font-black text-white glow-title mb-2">
+            Lunar Roving Vehicle (LRV-3)
+          </h2>
+          
+          <div class="flex items-center gap-2 text-xs font-mono-hud text-slate-400 mb-6">
+            <span>📍 <span id="modal-site">Taurus-Littrow Valley</span></span>
+            <span>•</span>
+            <span id="modal-coords" class="text-cyan-400">20.1908° N, 30.7717° E</span>
+          </div>
+
+          <!-- Personified Story Memoir Monologue -->
+          <div class="p-5 rounded-2xl bg-cyan-950/30 border border-cyan-500/30 mb-6 relative">
+            <div class="text-[10px] font-mono-hud text-cyan-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+              <span data-i18n-en="DE-ENCRYPTED HISTORICAL MEMOIR // POV OF THE MACHINE" data-i18n-ar="المذكرات التاريخية // من وجهة نظر الآلة">
+                DE-ENCRYPTED HISTORICAL MEMOIR // POV OF THE MACHINE
+              </span>
+            </div>
+            <p id="modal-quote" class="text-sm sm:text-base text-slate-100 italic leading-relaxed font-light">
+              <!-- Monologue injected here -->
+            </p>
+          </div>
+
+          <!-- Radio Voiceover Dispatch Action -->
+          <div class="flex flex-wrap items-center gap-3 sm:gap-4 mb-6 p-4 rounded-xl bg-slate-900 border border-slate-800">
+            <button 
+              id="btn-voice-transmit"
+              onclick="transmitCurrentVoiceLog()"
+              class="px-4 sm:px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-display font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(6,182,212,0.3)]"
+            >
+              <span class="inline-block w-2.5 h-2.5 rounded-full bg-cyan-950"></span>
+              <span data-i18n-en="TRANSMIT RADIO LOG" data-i18n-ar="استمع إلى البث اللاسلكي">TRANSMIT RADIO LOG</span>
+            </button>
+
+            <!-- Soundwave Audio Waveform Bars -->
+            <div id="modal-soundwave" class="flex items-end gap-1 h-5 opacity-0 transition-opacity">
+              <span class="soundwave-bar w-1 bg-cyan-400 rounded-full"></span>
+              <span class="soundwave-bar w-1 bg-cyan-400 rounded-full"></span>
+              <span class="soundwave-bar w-1 bg-cyan-400 rounded-full"></span>
+              <span class="soundwave-bar w-1 bg-cyan-400 rounded-full"></span>
+              <span class="soundwave-bar w-1 bg-cyan-400 rounded-full"></span>
+            </div>
+
+            <!-- Locate on 3D Globe Button -->
+            <button 
+              id="btn-modal-locate"
+              onclick="if(currentModalArtifact) locateArtifactOnGlobe(currentModalArtifact.id)"
+              class="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-cyan-300 font-mono-hud text-xs border border-slate-700 hover:border-cyan-400 transition-all flex items-center gap-1.5"
+            >
+              <span>🛰️</span>
+              <span data-i18n-en="LOCATE ON 3D GLOBE" data-i18n-ar="تحديد على الكوكب 3D">LOCATE ON 3D GLOBE</span>
+            </button>
+
+            <span class="text-[10px] font-mono-hud text-slate-400 ml-auto">
+              COMM FREQ: <span id="modal-freq" class="text-cyan-300">2287.5 MHz</span>
+            </span>
+          </div>
+
+          <!-- Telemetry Specifications Grid -->
+          <div class="grid grid-cols-2 gap-3 text-xs font-mono-hud">
+            <div class="p-3 rounded-lg bg-slate-900/80 border border-slate-800">
+              <span class="text-slate-500 block text-[10px]" data-i18n-en="LANDING DATE" data-i18n-ar="تاريخ الهبوط">LANDING DATE</span>
+              <span id="modal-date" class="text-slate-200 font-semibold">Dec 11, 1972</span>
+            </div>
+            <div class="p-3 rounded-lg bg-slate-900/80 border border-slate-800">
+              <span class="text-slate-500 block text-[10px]" data-i18n-en="CURRENT STATUS" data-i18n-ar="الحالة الحالية">CURRENT STATUS</span>
+              <span id="modal-status" class="text-amber-400 font-semibold">Parked at Station 6</span>
+            </div>
+            <div class="p-3 rounded-lg bg-slate-900/80 border border-slate-800">
+              <span class="text-slate-500 block text-[10px]" data-i18n-en="MASS ABANDONED" data-i18n-ar="الكتلة المتروكة">MASS ABANDONED</span>
+              <span id="modal-mass" class="text-slate-200 font-semibold">210 kg</span>
+            </div>
+            <div class="p-3 rounded-lg bg-slate-900/80 border border-slate-800">
+              <span class="text-slate-500 block text-[10px]" data-i18n-en="POWER SYSTEM" data-i18n-ar="نظام الطاقة">POWER SYSTEM</span>
+              <span id="modal-power" class="text-slate-200 font-semibold">Silver-Zinc Batteries</span>
+            </div>
+            <div class="col-span-2 p-3 rounded-lg bg-slate-900/80 border border-slate-800">
+              <span class="text-slate-500 block text-[10px]" data-i18n-en="MISSION LIFESPAN / TRAVERSE" data-i18n-ar="مسافة التجوال / المدة">MISSION LIFESPAN / TRAVERSE</span>
+              <span id="modal-duration" class="text-slate-200 font-semibold">35.74 km</span>
+            </div>
+            <div class="col-span-2 p-3 rounded-lg bg-slate-900/80 border border-slate-800">
+              <span class="text-slate-500 block text-[10px]" data-i18n-en="PRIMARY SCIENTIFIC BREAKTHROUGH" data-i18n-ar="أبرز الاكتشافات العلمية">PRIMARY SCIENTIFIC BREAKTHROUGH</span>
+              <span id="modal-discovery" class="text-cyan-300 font-light leading-relaxed">Discovered orange volcanic glass beads in Shorty Crater.</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Main JavaScript Application Logic -->
+  <script>
+/**
+ * NASA Space Apps Challenge 2026
+ * Project: "Abandoned but not Forgotten: Artifacts of Space Exploration"
+ * Lead Front-End & 3D Interactive Engine
+ */
+
+// ==========================================
+// 1. ARTIFACTS DATABASE (Rich Curated Data)
+// ==========================================
+const ARTIFACTS_DATA = [
+  {
+    id: "lrv",
+    name: "Lunar Roving Vehicle (LRV-3)",
+    arabicName: "عربة التجوال القمرية (LRV-3)",
+    target: "moon",
+    targetLabel: "The Moon 🌕",
+    targetLabelAr: "القمر 🌕",
+    mission: "Apollo 17",
+    landingDate: "December 11, 1972",
+    abandonedDate: "1972-12-14T22:54:37Z",
+    site: "Taurus-Littrow Valley",
+    coordinates: "20.1908° N, 30.7717° E",
+    lat: 20.1908,
+    lon: 30.7717,
+    radarX: 0.62,
+    radarY: 0.38,
+    status: "Parked at Station 6 // Camera Left On",
+    statusAr: "متوقفة في المحطة 6 // الكاميرا تركت تعمل",
+    statusType: "historic",
+    mass: "210 kg (Empty) / 700 kg (Loaded)",
+    powerSource: "Two 36-volt silver-zinc potassium hydroxide non-rechargeable batteries",
+    distanceTraveled: "35.74 km (Record Lunar Traverse)",
+    primaryDiscovery: "Discovered pyroclastic orange volcanic glass beads in Shorty Crater, proving the Moon experienced explosive volcanic fire-fountains 3.6 billion years ago.",
+    primaryDiscoveryAr: "اكتشاف حبيبات الزجاج البركاني البرتقالي في فوهة شورتي، مما أثبت وجود نشاط بركاني قديم على القمر.",
+    quote: "I am LRV-3, the final rover driven by human hands on another world. Gene Cernan parked me carefully at Station 6, aiming my high-gain antenna back at planet Earth so 500 million viewers could witness their departure. For over half a century, I have sat in the absolute stillness of Taurus-Littrow. My zinc-mesh tires have never deflated; my ignition switch remains turned to 'ON'—patiently awaiting the next travelers.",
+    quoteAr: "أنا العربة القمرية LRV-3، آخر مركبة قادها بشر على سطح عالم آخر. أوقفني رائد الفضاء جين سيرنان بعناية في المحطة 6، موجهاً هوائي الإرسال نحو كوكب الأرض ليشاهد مئات الملايين لحظة إقلاعهم الأخيرة. لأكثر من نصف قرن، جلست في سكون وادي توروس-ليترو المطلق. مفتاح تشغيلي ما زال على وضع 'التشغيل'—بانتظار المستكشفين القادمين.",
+    image: "https://images-assets.nasa.gov/image/as17-147-22527/as17-147-22527~medium.jpg",
+    nasaId: "as17-147-22527",
+    frequency: "2287.5 MHz (S-band)",
+    heritageNotice: "Protected under the U.S. One Small Step Act and International Lunar Heritage Guidelines."
+  },
+  {
+    id: "apollo11",
+    name: "Apollo 11 Lunar Module Descent Stage",
+    arabicName: "منصة هبوط مركبة أبولو 11 القمرية (النسر)",
+    target: "moon",
+    targetLabel: "The Moon 🌕",
+    targetLabelAr: "القمر 🌕",
+    mission: "Apollo 11",
+    landingDate: "July 20, 1969",
+    abandonedDate: "1969-07-21T17:54:00Z",
+    site: "Mare Tranquillitatis (Sea of Tranquility)",
+    coordinates: "0.67408° N, 23.47297° E",
+    lat: 0.67408,
+    lon: 23.47297,
+    radarX: 0.58,
+    radarY: 0.49,
+    status: "Permanent Lunar Monument",
+    statusAr: "أثر قمري دائم وخالد",
+    statusType: "monument",
+    mass: "2,034 kg (Dry Structural Mass)",
+    powerSource: "Four Silver-Zinc internal batteries",
+    distanceTraveled: "Stationary Lunar Base (Tranquility Base)",
+    primaryDiscovery: "First direct physical confirmation that lunar soil could bear structural loads without spacecraft sinking; gathered the first 21.5 kg of extraterrestrial rock samples.",
+    primaryDiscoveryAr: "أول إثبات عملي على قدرة التربة القمرية على حمل المركبات الفضائية؛ وجمع أول 21.5 كجم من صخور الفضاء.",
+    quote: "On July 20, 1969, humanity left their first boots in the dust beneath my golden struts. When Neil and Buzz fired the ascent engine to return to orbit, my landing stage remained behind to guard Tranquility Base. Fixed to my ladder leg is the plaque that never fades: 'Here men from the planet Earth first set foot upon the Moon. We came in peace for all mankind.'",
+    quoteAr: "في 20 يوليو 1969، وطأت أقدام البشر الأولى غبار القمر تحت قوائمي الذهبية. عندما انطلق نيل وباز للعودة إلى مدار القمر، بقيت هنا لأحرس قاعدة الهدوء للأبد. على إحدى قوائمي لوحة لا تبلى: 'هنا وطأت أقدام رجال من كوكب الأرض سطح القمر لأول مرة. أتينا بسلام من أجل البشرية جمعاء.'",
+    image: "https://images-assets.nasa.gov/image/as11-40-5903/as11-40-5903~medium.jpg",
+    nasaId: "as11-40-5903",
+    frequency: "2282.5 MHz (Unified S-band)",
+    heritageNotice: "Tranquility Base: UNESCO-proposed World Heritage Site on the Moon."
+  },
+  {
+    id: "surveyor3",
+    name: "Surveyor 3 Robotic Lander",
+    arabicName: "المسبار الآلي سيرفيور 3",
+    target: "moon",
+    targetLabel: "The Moon 🌕",
+    targetLabelAr: "القمر 🌕",
+    mission: "Surveyor Program / Visited by Apollo 12",
+    landingDate: "April 20, 1967",
+    abandonedDate: "1967-05-04T00:04:00Z",
+    site: "Oceanus Procellarum (Ocean of Storms)",
+    coordinates: "3.015° S, 23.418° W",
+    lat: -3.015,
+    lon: -23.418,
+    radarX: 0.43,
+    radarY: 0.52,
+    status: "Twice Abandoned // Visited by Pete Conrad",
+    statusAr: "متروك للمرة الثانية // زاره طاقم أبولو 12",
+    statusType: "revisited",
+    mass: "294 kg on surface",
+    powerSource: "Solar panel array & Silver-Zinc battery",
+    distanceTraveled: "Stationary (Three landing bounces)",
+    primaryDiscovery: "First mechanical surface sampler to dig trenches into the lunar surface; Apollo 12 astronaut retrieval of its camera provided humanity's only test of spacecraft material survival in space over years.",
+    primaryDiscoveryAr: "أول ذراع آلية تحفر خنادق في تربة القمر؛ وفحص كاميرتها بعد إعادتها للأرض وفّر الدراسة الوحيدة لكيفية صمود المواد في فراغ الفضاء لسنوات.",
+    quote: "I spent over two years alone in the vacuum until human shadows fell over my solar panel. Apollo 12 landed 180 meters away, and astronauts Pete Conrad and Alan Bean walked over, patted my frame, and cut off my optical camera to bring it back to Earth for science. I was abandoned, rediscovered, and left behind once more—a silent bridge between robots and humans.",
+    quoteAr: "قضيت أكثر من عامين وحيداً في الفراغ حتى سقطت ظلال بشرية على لوحي الشمسي. هبطت أبولو 12 على بعد 180 متراً، وجاء رائدا الفضاء، وتفقدوا هيكلي وأخذوا كاميرتي للأرض لفحصها. لقد كنت الجسر الصامت بين الآلات والبشر.",
+    image: "https://images-assets.nasa.gov/image/as12-48-7134/as12-48-7134~medium.jpg",
+    nasaId: "as12-48-7134",
+    frequency: "2295.0 MHz (Transponder)",
+    heritageNotice: "Historic artifact demonstrating long-term environmental exposure on the Moon."
+  },
+  {
+    id: "lunokhod1",
+    name: "Lunokhod 1 / Luna 17",
+    arabicName: "لونوخود 1 (المركبة السوفيتية الأولى)",
+    target: "moon",
+    targetLabel: "The Moon 🌕",
+    targetLabelAr: "القمر 🌕",
+    mission: "Luna 17",
+    landingDate: "November 17, 1970",
+    abandonedDate: "1971-10-04T10:05:00Z",
+    site: "Mare Imbrium (Sea of Rains)",
+    coordinates: "38.315° N, 35.008° W",
+    lat: 38.315,
+    lon: -35.008,
+    radarX: 0.39,
+    radarY: 0.28,
+    status: "Laser Reflector Still Active",
+    statusAr: "عاكس الليزر لا يزال يعمل حتى اليوم",
+    statusType: "laser",
+    mass: "756 kg",
+    powerSource: "Solar cells lid & Polonium-210 isotope heater",
+    distanceTraveled: "10.54 km across Mare Imbrium",
+    primaryDiscovery: "First robotic wheeled rover in human history to roam another celestial body; conducted 500 soil penetrometry tests and transmitted 20,000 television images.",
+    primaryDiscoveryAr: "أول روبوت متجول بعجلات في تاريخ البشرية يجوب عالماً آخر؛ أجرى 500 اختبار لصلابة التربة وبث 20,000 صورة.",
+    quote: "Before wheels ever turned on Mars, I rolled across the Sea of Rains in 1970. Shaped like a tub on eight mesh wheels, I was guided by five pilots in a bunker 384,000 km away. My wheels have frozen in place, but I am not dead: scientists still fire laser pulses from Earth observatories that bounce off my corner-cube reflector, measuring the distance to our home world.",
+    quoteAr: "قبل أن تدور أي عجلة على المريخ، سِرت عبر بحر الأمطار في 1970. هيكلي يشبه حوضاً على 8 عجلات سلكية، وكان يقودني 5 طيارين من الأرض. تجمدت عجلاتي، لكن نبضات الليزر من مراصد الأرض ما زالت ترتد عن عاكسي لقياس مسافة مدار القمر.",
+    image: "https://images-assets.nasa.gov/image/S89-28148/S89-28148~medium.jpg",
+    nasaId: "S89-28148",
+    frequency: "Corner-Cube Optical Laser (532 nm)",
+    heritageNotice: "Still utilized by the Apache Point Observatory Lunar Laser-ranging Operation."
+  },
+  {
+    id: "opportunity",
+    name: "Opportunity Rover (MER-B / 'Oppy')",
+    arabicName: "مركبة أبورتيونيتي (أوبي - MER-B)",
+    target: "mars",
+    targetLabel: "Mars 🔴",
+    targetLabelAr: "المريخ 🔴",
+    mission: "Mars Exploration Rover B",
+    landingDate: "January 25, 2004",
+    abandonedDate: "2018-06-10T12:00:00Z",
+    site: "Perseverance Valley, Endeavour Crater",
+    coordinates: "1.9462° S, 354.4734° E",
+    lat: -1.9462,
+    lon: -5.5266,
+    radarX: 0.52,
+    radarY: 0.51,
+    status: "Asleep under Martian Dust // 5,111 Sols",
+    statusAr: "نائمة تحت الغبار المريخي // 5111 يوماً مريخياً",
+    statusType: "sleeping",
+    mass: "185 kg",
+    powerSource: "Solar panel wings & Li-ion batteries",
+    distanceTraveled: "45.16 km (Off-world Marathon Record)",
+    primaryDiscovery: "Discovered hematite 'blueberries' and layered sulfate rocks in Eagle & Endeavour craters, providing undeniable proof that acidic liquid groundwater once soaked ancient Mars.",
+    primaryDiscoveryAr: "اكتشاف كريات الهيماتيت 'التوت الأزرق' وصخور الكبريتات، مما قدّم دليلاً قاطعاً على تدفق المياه السائلة قديماً على المريخ.",
+    quote: "They designed me to survive ninety days. I gave them fifteen glorious years. I ran an off-world marathon across red dunes and deep craters until a planet-engulfing dust storm blotted out the sun in 2018. My final telemetry echoed home: 'My battery is low and it is getting dark.' Now the red sands gently tuck me in. I did good, didn't I?",
+    quoteAr: "صممونى لأعيش 90 يوماً فقط، فأهديتهم 15 عاماً مجيدة. قطعت مسافة ماراثون كامل عبر الكثبان الحمراء حتى حجبَت عاصفة غبارية كوكبية ضوء الشمس في 2018. كانت رسالتي الأخيرة: 'بطاريتي ضعيفة وبدأ الظلام يحل.' الآن يغطيني غبار المريخ الأحمر في نوم أبدي.",
+    image: "https://images-assets.nasa.gov/image/PIA18420/PIA18420~medium.jpg",
+    nasaId: "PIA18420",
+    frequency: "Direct-to-Earth X-band (7.1-8.4 GHz)",
+    heritageNotice: "Recipient of the National Air and Space Museum Trophy for Lifetime Achievement."
+  },
+  {
+    id: "viking1",
+    name: "Viking 1 Lander",
+    arabicName: "مركبة الهبوط فايكنج 1",
+    target: "mars",
+    targetLabel: "Mars 🔴",
+    targetLabelAr: "المريخ 🔴",
+    mission: "Viking Program",
+    landingDate: "July 20, 1976",
+    abandonedDate: "1982-11-13T00:00:00Z",
+    site: "Chryse Planitia (Plains of Gold)",
+    coordinates: "22.697° N, 48.222° W",
+    lat: 22.697,
+    lon: -48.222,
+    radarX: 0.36,
+    radarY: 0.35,
+    status: "Thomas Mutch Memorial Station // Silent",
+    statusAr: "محطة توماس ماتش التذكارية // صامتة",
+    statusType: "historic",
+    mass: "657 kg on surface",
+    powerSource: "Two Radioisotope Thermoelectric Generators (RTGs - Plutonium-238)",
+    distanceTraveled: "Stationary Pioneer Station (2,307 Sols operational)",
+    primaryDiscovery: "First successful operational mission to land on Mars; sent the very first high-resolution color photographs from the Martian surface and conducted the first biological tests for soil metabolism.",
+    primaryDiscoveryAr: "أول هبوط ناجح وعمليات مستمرة على المريخ؛ وأول صور ملونة عالية الدقة من السطح مع أول تجارب بحثاً عن حياة مجهرية.",
+    quote: "On America's bicentennial, I was the pioneer that unlocked the Red Planet. For six long years, I watched the butterscotch sky and felt the chill of Martian winters. In 1982, an uplinked command accidentally commanded my antenna away from Earth, and my voice ceased. I still sit in Chryse Planitia—the grandfather of all Mars explorers.",
+    quoteAr: "كنت المسبار الرائد الذي فتح أبواب الكوكب الأحمر للبشرية. لست سنوات تابعت السماء المريخية وعايشت رياح الشتاء القارس. في 1982 انقطع اتصالي بالأرض بسبب أمر تقني غير مقصود. ما زلت هناك في سهول الذهب كأول شاهد لناسا على المريخ.",
+    image: "https://images-assets.nasa.gov/image/PIA00572/PIA00572~medium.jpg",
+    nasaId: "PIA00572",
+    frequency: "UHF Relay (381 MHz) / S-Band Direct",
+    heritageNotice: "Renamed the Thomas A. Mutch Memorial Station in honor of the imaging team leader."
+  },
+  {
+    id: "sojourner",
+    name: "Sojourner Rover (Mars Pathfinder)",
+    arabicName: "المركبة المتجولة سوجورنر (باثفايندر)",
+    target: "mars",
+    targetLabel: "Mars 🔴",
+    targetLabelAr: "المريخ 🔴",
+    mission: "Mars Pathfinder",
+    landingDate: "July 4, 1997",
+    abandonedDate: "1997-09-27T10:23:00Z",
+    site: "Ares Vallis",
+    coordinates: "19.13° N, 33.22° W",
+    lat: 19.13,
+    lon: -33.22,
+    radarX: 0.41,
+    radarY: 0.39,
+    status: "Parked by Carl Sagan Memorial Station",
+    statusAr: "متوقفة بجانب محطة كارل ساجان التذكارية",
+    statusType: "pioneer",
+    mass: "10.5 kg (Microrover)",
+    powerSource: "0.22 m² solar panel & non-rechargeable lithium battery",
+    distanceTraveled: "100 meters around the lander",
+    primaryDiscovery: "First wheeled rover on Mars; analyzed rocks 'Barnacle Bill' and 'Yogi', proving the ancient valley was carved by catastrophic liquid water flash-floods.",
+    primaryDiscoveryAr: "أول مركبة متجولة بعجلات على المريخ؛ قامت بتحليل الصخور وأثبتت أن وادي آريس تشكّل بفعل فيضانات مائية جارفة قديماً.",
+    quote: "I was tiny—only the size of a microwave oven, weighing 10 kilograms. Critics called me a toy that would never survive. But on July 4, 1997, I rolled down Pathfinder's ramps into Ares Vallis and proved to humanity that rovers were the destiny of planetary science.",
+    quoteAr: "كنت صغيرة جداً بحجم فرن الميكروويف وبوزن 10 كجم فقط، وظن البعض أنني مجرد تجربة لن تصمد. لكنني هبطت في وادي آريس وأثبتت للبشرية أن العربات المتجولة هي مفتاح استكشاف الكواكب.",
+    image: "https://images-assets.nasa.gov/image/PIA01122/PIA01122~medium.jpg",
+    nasaId: "PIA01122",
+    frequency: "9600 bps UHF radio modem (459.7 MHz)",
+    heritageNotice: "The revolutionary proof-of-concept for all subsequent Mars rovers."
+  },
+  {
+    id: "phoenix",
+    name: "Phoenix Mars Lander",
+    arabicName: "مسبار فينيكس المريخي القطبي",
+    target: "mars",
+    targetLabel: "Mars 🔴",
+    targetLabelAr: "المريخ 🔴",
+    mission: "Mars Scout Program",
+    landingDate: "May 25, 2008",
+    abandonedDate: "2008-11-02T00:00:00Z",
+    site: "Green Valley, Vastitas Borealis (Arctic)",
+    coordinates: "68.2188° N, 125.7492° W",
+    lat: 68.2188,
+    lon: -125.7492,
+    radarX: 0.22,
+    radarY: 0.16,
+    status: "Entombed in Polar Dry Ice",
+    statusAr: "مدفون تحت جليد القطب الشمالي للمريخ",
+    statusType: "frozen",
+    mass: "350 kg",
+    powerSource: "Dual circular solar array wings",
+    distanceTraveled: "Stationary Arctic Station (161 days operational)",
+    primaryDiscovery: "Scraped just inches beneath the red regolith and directly observed pure white water ice vaporize in real time; confirmed snow falling from Martian clouds.",
+    primaryDiscoveryAr: "حفر بضع بوصات فقط تحت السطح ليكشف عن جليد مائي نقي تبخر أمام الكاميرات؛ ورصد تساقط الثلوج من السحب المريخية.",
+    quote: "They sent me where rovers could never dare tread—the frozen polar plains of the Martian Arctic. My robotic arm scraped away the red dust and found pure white water-ice gleaming beneath. Then the brutal winter arrived, encasing my solar wings in darkness and dry ice. I froze so you would know that Mars still holds water.",
+    quoteAr: "أرسلوني إلى حيث لا تجرؤ أي مركبة على السير: السهول القطبية الشمالية المتجمدة للمريخ. كشطت ذراعي الآلية الغبار الأحمر لتكشف عن جليد ماء ناصع البياض. ثم حل الشتاء القطبي ليغمرني بجليد ثاني أكسيد الكربون. لقد تجمدت لتعرفوا أن المريخ لا يزال يحمل الماء.",
+    image: "https://images-assets.nasa.gov/image/PIA10748/PIA10748~medium.jpg",
+    nasaId: "PIA10748",
+    frequency: "UHF relay to Mars Odyssey & MRO",
+    heritageNotice: "First mission of NASA's Mars Scout Program."
+  },
+  {
+    id: "voyager1",
+    name: "Voyager 1 & The Golden Record",
+    arabicName: "فوياجر 1 والأسطوانة الذهبية",
+    target: "deep-space",
+    targetLabel: "Interstellar Void 🚀",
+    targetLabelAr: "الفضاء بين النجمي 🚀",
+    mission: "Voyager Interstellar Mission",
+    landingDate: "Launched Sep 5, 1977",
+    abandonedDate: "1977-09-05T12:56:00Z",
+    site: "Interstellar Space (Ophiuchus Constellation)",
+    coordinates: "Heliocentric: 163.5 AU (~24.4 Billion km)",
+    lat: 12.2,
+    lon: 17.5,
+    radarX: 0.85,
+    radarY: 0.18,
+    status: "Drifting in Interstellar Space // Eternal Sentinel",
+    statusAr: "تسبح في الفضاء بين النجمي // حارسة أبدية لرسالة الأرض",
+    statusType: "interstellar",
+    mass: "825 kg",
+    powerSource: "Three Radioisotope Thermoelectric Generators (RTG)",
+    distanceTraveled: "Over 24,400,000,000 km from Earth",
+    primaryDiscovery: "First human spacecraft to cross the heliopause and enter interstellar space; took the iconic 'Pale Blue Dot' portrait of Earth from 6 billion kilometers away.",
+    primaryDiscoveryAr: "أول مركبة بشرية تعبر حدود الغلاف الشمسي وتدخل الفضاء بين النجوم؛ والتقطت صورة 'النقطة الزرقاء الباهتة' الشهيرة للأرض.",
+    quote: "I am humanity's furthest emissary. Carried on my side is a 12-inch gold-plated copper phonograph record encoded with the greetings of Earth in 55 languages, whale songs, Mozart, and human heartbeats. When my plutonium generators fade into cold silence, my golden record will wander the silent sea between the stars for a billion years—our eternal calling card in the dark.",
+    quoteAr: "أنا أبعد مبعوث للبشرية في الكون. أحمل على جانبي أسطوانة نحاسية مطلية بالذهب مشفرة بتحيات بـ 55 لغة بشرية، وأصوات الحيتان، وموسيقى موزارت، ونبضات قلب إنسان. عندما تنطفئ مولداتي، ستظل أسطوانتي الذهبية تسبح في بحر الفضاء لمليار سنة—رسالتنا الأبدية إلى من في الظلام.",
+    image: "https://images-assets.nasa.gov/image/PIA22566/PIA22566~medium.jpg",
+    nasaId: "PIA22566",
+    frequency: "Deep Space Network (8.4 GHz X-band)",
+    heritageNotice: "Humanity's longest-lived spacecraft and primary interstellar time capsule."
+  }
+];
+
+// Fallback Procedural SVG Generator for reliable offline/network resilient imagery
+function getArtifactFallbackSvg(name, target) {
+  const color = target === 'mars' ? '#f97316' : target === 'deep-space' ? '#a855f7' : '#22d3ee';
+  const icon = target === 'mars' ? '🔴' : target === 'deep-space' ? '🚀' : '🌕';
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400" fill="none">
+    <rect width="600" height="400" fill="#070f21"/>
+    <defs>
+      <pattern id="grid" width="25" height="25" patternUnits="userSpaceOnUse">
+        <path d="M 25 0 L 0 0 0 25" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+      </pattern>
+    </defs>
+    <rect width="600" height="400" fill="url(#grid)"/>
+    <circle cx="300" cy="180" r="70" stroke="${color}" stroke-width="2" stroke-dasharray="6 4" opacity="0.6"/>
+    <circle cx="300" cy="180" r="12" fill="${color}"/>
+    <text x="300" y="195" font-size="40" text-anchor="middle">${icon}</text>
+    <text x="300" y="290" font-family="monospace" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="middle">${name}</text>
+    <text x="300" y="320" font-family="monospace" font-size="12" fill="${color}" text-anchor="middle">[CLASSIFIED NASA ARTIFACT DOSSIER]</text>
+  </svg>`;
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+
+// Planet Telemetry Specs
+const CELESTIAL_SPECS = {
+  moon: {
+    name: "The Moon (Luna)",
+    nameAr: "القمر (لونا)",
+    subtitle: "Earth's Only Natural Satellite",
+    subtitleAr: "التابع الطبيعي الوحيد لكوكب الأرض",
+    distance: "384,400 km from Earth",
+    gravity: "1.62 m/s² (0.166 g)",
+    temp: "-130°C to +120°C",
+    atmosphere: "Ultra-High Vacuum (< 10⁻¹² bar)",
+    artifactsCount: "74+ Documented Missions (~200,000 kg hardware)",
+    artifactsCountAr: "أكثر من 74 مهمة موثقة (~200 طن معدات)",
+    color: "#94a3b8",
+    glowColor: "rgba(148, 163, 184, 0.4)"
+  },
+  mars: {
+    name: "Mars (Ares)",
+    nameAr: "المريخ (آريس)",
+    subtitle: "The Red Planet",
+    subtitleAr: "الكوكب الأحمر",
+    distance: "225,000,000 km (Average)",
+    gravity: "3.72 m/s² (0.379 g)",
+    temp: "-140°C to +20°C",
+    atmosphere: "Thin CO₂ (0.006 bar - 95.3% Carbon Dioxide)",
+    artifactsCount: "16+ Surface Landers & Rovers (~10,000 kg)",
+    artifactsCountAr: "أكثر من 16 مسباراً ومركبة هبوط (~10 أطنان)",
+    color: "#f97316",
+    glowColor: "rgba(249, 115, 22, 0.5)"
+  }
+};
+
+// ==========================================
+// 2. PROCEDURAL WEB AUDIO SYNTHESIZER
+// ==========================================
+class SpaceAudioEngine {
+  constructor() {
+    this.ctx = null;
+    this.ambientPlaying = false;
+    this.droneOsc1 = null;
+    this.droneOsc2 = null;
+    this.droneFilter = null;
+    this.droneGain = null;
+    this.lfo = null;
+    this.isSpeaking = false;
+    this.synth = window.speechSynthesis || null;
+  }
+
+  init() {
+    if (!this.ctx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) {
+        this.ctx = new AudioCtx();
+      }
+    }
+    if (this.ctx && this.ctx.state === "suspended") {
+      this.ctx.resume();
+    }
+  }
+
+  toggleAmbient() {
+    this.init();
+    if (!this.ctx) return false;
+
+    if (this.ambientPlaying) {
+      this.stopAmbient();
+      return false;
+    } else {
+      this.startAmbient();
+      return true;
+    }
+  }
+
+  startAmbient() {
+    if (!this.ctx || this.ambientPlaying) return;
+
+    this.droneGain = this.ctx.createGain();
+    this.droneGain.gain.setValueAtTime(0.001, this.ctx.currentTime);
+    this.droneGain.gain.exponentialRampToValueAtTime(0.12, this.ctx.currentTime + 3);
+
+    this.droneFilter = this.ctx.createBiquadFilter();
+    this.droneFilter.type = "lowpass";
+    this.droneFilter.frequency.setValueAtTime(140, this.ctx.currentTime);
+    this.droneFilter.Q.setValueAtTime(4, this.ctx.currentTime);
+
+    this.droneOsc1 = this.ctx.createOscillator();
+    this.droneOsc1.type = "sine";
+    this.droneOsc1.frequency.setValueAtTime(55, this.ctx.currentTime);
+
+    this.droneOsc2 = this.ctx.createOscillator();
+    this.droneOsc2.type = "triangle";
+    this.droneOsc2.frequency.setValueAtTime(82.4, this.ctx.currentTime);
+
+    this.lfo = this.ctx.createOscillator();
+    this.lfo.frequency.setValueAtTime(0.08, this.ctx.currentTime);
+    const lfoGain = this.ctx.createGain();
+    lfoGain.gain.setValueAtTime(30, this.ctx.currentTime);
+    this.lfo.connect(lfoGain);
+    lfoGain.connect(this.droneFilter.frequency);
+
+    this.droneOsc1.connect(this.droneFilter);
+    this.droneOsc2.connect(this.droneFilter);
+    this.droneFilter.connect(this.droneGain);
+    this.droneGain.connect(this.ctx.destination);
+
+    this.droneOsc1.start();
+    this.droneOsc2.start();
+    this.lfo.start();
+
+    this.ambientPlaying = true;
+  }
+
+  stopAmbient() {
+    if (!this.ambientPlaying) return;
+    if (this.droneGain && this.ctx) {
+      this.droneGain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 1);
+      setTimeout(() => {
+        try {
+          this.droneOsc1 && this.droneOsc1.stop();
+          this.droneOsc2 && this.droneOsc2.stop();
+          this.lfo && this.lfo.stop();
+        } catch (e) {}
+        this.ambientPlaying = false;
+      }, 1000);
+    } else {
+      this.ambientPlaying = false;
+    }
+  }
+
+  playQuindarTone(isIntro = true) {
+    this.init();
+    if (!this.ctx) return;
+
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    const freq = isIntro ? 2525 : 2475;
+
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+
+    gain.gain.setValueAtTime(0.001, this.ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.18, this.ctx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.25);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.25);
+  }
+
+  playRadioStatic(duration = 0.2) {
+    this.init();
+    if (!this.ctx) return;
+
+    const bufferSize = this.ctx.sampleRate * duration;
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * 0.5;
+    }
+
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.setValueAtTime(1600, this.ctx.currentTime);
+    filter.Q.setValueAtTime(2.5, this.ctx.currentTime);
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    noise.start();
+  }
+
+  playRadarPing() {
+    this.init();
+    if (!this.ctx) return;
+
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(980, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(440, this.ctx.currentTime + 0.4);
+
+    gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.4);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.4);
+  }
+
+  playClick() {
+    this.init();
+    if (!this.ctx) return;
+
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(1400, this.ctx.currentTime);
+
+    gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.05);
+  }
+
+  speakStory(text, lang = "en", onStart, onEnd) {
+    if (!this.synth) {
+      if (onStart) onStart();
+      if (onEnd) setTimeout(onEnd, 3000);
+      return;
+    }
+
+    this.stopSpeaking();
+    this.playQuindarTone(true);
+    setTimeout(() => this.playRadioStatic(0.25), 150);
+
+    setTimeout(() => {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = lang === "ar" ? "ar-SA" : "en-US";
+      utterance.rate = 0.92;
+      utterance.pitch = 0.95;
+
+      utterance.onstart = () => {
+        this.isSpeaking = true;
+        if (onStart) onStart();
+      };
+
+      utterance.onend = () => {
+        this.isSpeaking = false;
+        this.playRadioStatic(0.2);
+        setTimeout(() => this.playQuindarTone(false), 200);
+        if (onEnd) onEnd();
+      };
+
+      utterance.onerror = () => {
+        this.isSpeaking = false;
+        if (onEnd) onEnd();
+      };
+
+      this.synth.speak(utterance);
+    }, 450);
+  }
+
+  stopSpeaking() {
+    if (this.synth) {
+      this.synth.cancel();
+      this.isSpeaking = false;
+    }
+  }
+}
+
+const spaceAudio = new SpaceAudioEngine();
+
+// ==========================================
+// 3. THREE.JS 3D PLANET & HOTSPOT ENGINE
+// ==========================================
+class Planet3DEngine {
+  constructor(containerId) {
+    this.container = document.getElementById(containerId);
+    this.currentTarget = "moon";
+    this.scene = null;
+    this.camera = null;
+    this.renderer = null;
+    this.planetMesh = null;
+    this.atmosphereMesh = null;
+    this.markerGroup = new THREE.Group();
+    this.raycaster = new THREE.Raycaster();
+    this.mouse = new THREE.Vector2();
+    this.isDragging = false;
+    this.previousMousePosition = { x: 0, y: 0 };
+    this.targetRotation = { x: 0.1, y: 0 };
+    this.currentRotation = { x: 0.1, y: 0 };
+    this.hotspotObjects = [];
+    this.hoveredHotspot = null;
+    this.tooltipEl = document.getElementById("planet-hotspot-tooltip");
+    this.materials = { moon: null, mars: null };
+  }
+
+  init() {
+    if (!this.container || typeof THREE === "undefined") {
+      console.warn("Three.js not loaded or container missing.");
+      return;
+    }
+
+    const width = this.container.clientWidth;
+    const height = this.container.clientHeight;
+
+    this.scene = new THREE.Scene();
+    this.camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+    this.camera.position.z = 6.8;
+
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+    this.renderer.setSize(width, height);
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.shadowMap.enabled = true;
+    this.container.appendChild(this.renderer.domElement);
+
+    const ambientLight = new THREE.AmbientLight(0x222a38, 0.9);
+    this.scene.add(ambientLight);
+
+    const sunLight = new THREE.DirectionalLight(0xffffff, 1.8);
+    sunLight.position.set(5, 3, 5);
+    this.scene.add(sunLight);
+
+    const rimLight = new THREE.DirectionalLight(0x38bdf8, 0.5);
+    rimLight.position.set(-5, -2, -3);
+    this.scene.add(rimLight);
+
+    this.materials.moon = this.createMoonMaterial();
+    this.materials.mars = this.createMarsMaterial();
+
+    const geometry = new THREE.SphereGeometry(2.4, 64, 64);
+    this.planetMesh = new THREE.Mesh(geometry, this.materials.moon);
+    this.scene.add(this.planetMesh);
+
+    const atmosGeo = new THREE.SphereGeometry(2.46, 64, 64);
+    const atmosMat = new THREE.MeshBasicMaterial({
+      color: 0xf97316,
+      transparent: true,
+      opacity: 0.0,
+      side: THREE.BackSide,
+      blending: THREE.AdditiveBlending
+    });
+    this.atmosphereMesh = new THREE.Mesh(atmosGeo, atmosMat);
+    this.scene.add(this.atmosphereMesh);
+
+    this.planetMesh.add(this.markerGroup);
+    this.updateHotspotMarkers();
+    this.setupInteractions();
+    window.addEventListener("resize", () => this.onWindowResize());
+
+    this.animate();
+  }
+
+  createMoonMaterial() {
+    const canvas = document.createElement("canvas");
+    canvas.width = 2048;
+    canvas.height = 1024;
+    const ctx = canvas.getContext("2d");
+
+    ctx.fillStyle = "#8a8d94";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const maria = [
+      { x: 750, y: 400, rx: 280, ry: 200 },
+      { x: 1100, y: 380, rx: 160, ry: 130 },
+      { x: 1250, y: 340, rx: 120, ry: 100 },
+      { x: 950, y: 300, rx: 180, ry: 140 },
+      { x: 1050, y: 480, rx: 140, ry: 100 }
+    ];
+
+    maria.forEach(m => {
+      const grad = ctx.createRadialGradient(m.x, m.y, 10, m.x, m.y, Math.max(m.rx, m.ry));
+      grad.addColorStop(0, "rgba(50, 52, 58, 0.85)");
+      grad.addColorStop(0.6, "rgba(65, 68, 75, 0.7)");
+      grad.addColorStop(1, "rgba(138, 141, 148, 0)");
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.ellipse(m.x, m.y, m.rx, m.ry, 0, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    for (let i = 0; i < 400; i++) {
+      const cx = Math.random() * canvas.width;
+      const cy = Math.random() * canvas.height;
+      const radius = Math.random() * 18 + 2;
+
+      ctx.fillStyle = "rgba(40, 42, 46, 0.6)";
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = "rgba(235, 238, 245, 0.45)";
+      ctx.lineWidth = radius * 0.25;
+      ctx.beginPath();
+      ctx.arc(cx - radius * 0.15, cy - radius * 0.15, radius, Math.PI * 0.8, Math.PI * 1.8);
+      ctx.stroke();
+    }
+
+    const tychoX = 980;
+    const tychoY = 700;
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
+    ctx.lineWidth = 1.5;
+    for (let r = 0; r < 24; r++) {
+      const angle = (r / 24) * Math.PI * 2;
+      const length = 200 + Math.random() * 250;
+      ctx.beginPath();
+      ctx.moveTo(tychoX, tychoY);
+      ctx.lineTo(tychoX + Math.cos(angle) * length, tychoY + Math.sin(angle) * length);
+      ctx.stroke();
+    }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+
+    return new THREE.MeshStandardMaterial({
+      map: texture,
+      roughness: 0.88,
+      metalness: 0.08
+    });
+  }
+
+  createMarsMaterial() {
+    const canvas = document.createElement("canvas");
+    canvas.width = 2048;
+    canvas.height = 1024;
+    const ctx = canvas.getContext("2d");
+
+    ctx.fillStyle = "#c85a2b";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const darkRegions = [
+      { x: 800, y: 520, rx: 240, ry: 160 },
+      { x: 1250, y: 460, rx: 200, ry: 130 },
+      { x: 500, y: 420, rx: 180, ry: 120 }
+    ];
+
+    darkRegions.forEach(d => {
+      const grad = ctx.createRadialGradient(d.x, d.y, 20, d.x, d.y, Math.max(d.rx, d.ry));
+      grad.addColorStop(0, "rgba(85, 34, 18, 0.85)");
+      grad.addColorStop(0.7, "rgba(120, 48, 24, 0.6)");
+      grad.addColorStop(1, "rgba(200, 90, 43, 0)");
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.ellipse(d.x, d.y, d.rx, d.ry, 0, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    ctx.strokeStyle = "rgba(60, 22, 10, 0.75)";
+    ctx.lineWidth = 14;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(700, 520);
+    ctx.bezierCurveTo(900, 540, 1100, 500, 1280, 530);
+    ctx.stroke();
+
+    const northIce = ctx.createLinearGradient(0, 0, 0, 110);
+    northIce.addColorStop(0, "#ffffff");
+    northIce.addColorStop(0.7, "rgba(255, 255, 255, 0.85)");
+    northIce.addColorStop(1, "rgba(255, 255, 255, 0)");
+    ctx.fillStyle = northIce;
+    ctx.fillRect(0, 0, canvas.width, 110);
+
+    const southIce = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - 90);
+    southIce.addColorStop(0, "#ffffff");
+    southIce.addColorStop(0.7, "rgba(255, 255, 255, 0.8)");
+    southIce.addColorStop(1, "rgba(255, 255, 255, 0)");
+    ctx.fillStyle = southIce;
+    ctx.fillRect(0, canvas.height - 90, canvas.width, 90);
+
+    for (let i = 0; i < 350; i++) {
+      const cx = Math.random() * canvas.width;
+      const cy = Math.random() * canvas.height;
+      const radius = Math.random() * 12 + 2;
+
+      ctx.fillStyle = "rgba(70, 25, 12, 0.5)";
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = "rgba(250, 160, 120, 0.35)";
+      ctx.lineWidth = radius * 0.2;
+      ctx.beginPath();
+      ctx.arc(cx - radius * 0.1, cy - radius * 0.1, radius, Math.PI * 0.8, Math.PI * 1.8);
+      ctx.stroke();
+    }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+
+    return new THREE.MeshStandardMaterial({
+      map: texture,
+      roughness: 0.92,
+      metalness: 0.05
+    });
+  }
+
+  updateHotspotMarkers() {
+    while (this.markerGroup.children.length > 0) {
+      this.markerGroup.remove(this.markerGroup.children[0]);
+    }
+    this.hotspotObjects = [];
+
+    const artifacts = ARTIFACTS_DATA.filter(a => a.target === this.currentTarget);
+    const radius = 2.41;
+
+    artifacts.forEach(art => {
+      const phi = (90 - art.lat) * (Math.PI / 180);
+      const theta = (art.lon + 180) * (Math.PI / 180);
+
+      const x = -(radius * Math.sin(phi) * Math.cos(theta));
+      const z = radius * Math.sin(phi) * Math.sin(theta);
+      const y = radius * Math.cos(phi);
+
+      const markerMesh = new THREE.Group();
+      markerMesh.position.set(x, y, z);
+      markerMesh.lookAt(x * 2, y * 2, z * 2);
+
+      const pinColor = this.currentTarget === "moon" ? 0x22d3ee : 0xf97316;
+      const pinGeo = new THREE.SphereGeometry(0.065, 16, 16);
+      const pinMat = new THREE.MeshBasicMaterial({ color: pinColor });
+      const pin = new THREE.Mesh(pinGeo, pinMat);
+      markerMesh.add(pin);
+
+      const ringGeo = new THREE.RingGeometry(0.09, 0.13, 24);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: pinColor,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.8
+      });
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      markerMesh.add(ring);
+
+      markerMesh.userData = { artifact: art, ringMesh: ring };
+      this.markerGroup.add(markerMesh);
+      this.hotspotObjects.push(pin);
+    });
+  }
+
+  switchTarget(target) {
+    if (this.currentTarget === target) return;
+    this.currentTarget = target;
+
+    spaceAudio.playClick();
+
+    const scaleDown = () => {
+      let step = 0;
+      const interval = setInterval(() => {
+        step++;
+        const s = 1 - Math.sin((step / 10) * (Math.PI / 2)) * 0.25;
+        this.planetMesh.scale.set(s, s, s);
+        if (step >= 10) {
+          clearInterval(interval);
+          this.planetMesh.material = target === "moon" ? this.materials.moon : this.materials.mars;
+          this.atmosphereMesh.material.opacity = target === "mars" ? 0.25 : 0.0;
+          this.atmosphereMesh.material.color.setHex(target === "mars" ? 0xf97316 : 0x06b6d4);
+          this.updateHotspotMarkers();
+          scaleUp();
+        }
+      }, 16);
+    };
+
+    const scaleUp = () => {
+      let step = 0;
+      const interval = setInterval(() => {
+        step++;
+        const s = 0.75 + Math.sin((step / 10) * (Math.PI / 2)) * 0.25;
+        this.planetMesh.scale.set(s, s, s);
+        if (step >= 10) {
+          clearInterval(interval);
+          this.planetMesh.scale.set(1, 1, 1);
+        }
+      }, 16);
+    };
+
+    scaleDown();
+    this.updateTelemetryHUD(target);
+  }
+
+  // Smoothly rotate planet so the artifact's coordinates point directly at the camera
+  focusArtifact(artifact) {
+    if (artifact.target !== this.currentTarget && (artifact.target === "moon" || artifact.target === "mars")) {
+      this.switchTarget(artifact.target);
+    }
+    // Calculate angles to face camera
+    const latRad = (artifact.lat * Math.PI) / 180;
+    const lonRad = (artifact.lon * Math.PI) / 180;
+
+    this.targetRotation.x = latRad;
+    this.targetRotation.y = -lonRad - Math.PI / 2;
+  }
+
+  updateTelemetryHUD(target) {
+    const specs = CELESTIAL_SPECS[target] || CELESTIAL_SPECS.moon;
+    const isAr = document.body.getAttribute("dir") === "rtl";
+
+    document.getElementById("hud-target-name").textContent = isAr ? specs.nameAr : specs.name;
+    document.getElementById("hud-target-sub").textContent = isAr ? specs.subtitleAr : specs.subtitle;
+    document.getElementById("hud-distance").textContent = specs.distance;
+    document.getElementById("hud-gravity").textContent = specs.gravity;
+    document.getElementById("hud-temp").textContent = specs.temp;
+    document.getElementById("hud-atmosphere").textContent = specs.atmosphere;
+    document.getElementById("hud-artifacts-count").textContent = isAr ? specs.artifactsCountAr : specs.artifactsCount;
+  }
+
+  setupInteractions() {
+    const el = this.container;
+
+    el.addEventListener("mousedown", e => {
+      this.isDragging = true;
+      this.previousMousePosition = { x: e.clientX, y: e.clientY };
+    });
+
+    window.addEventListener("mouseup", () => {
+      this.isDragging = false;
+    });
+
+    window.addEventListener("mousemove", e => {
+      const rect = el.getBoundingClientRect();
+      this.mouse.x = ((e.clientX - rect.left) / el.clientWidth) * 2 - 1;
+      this.mouse.y = -((e.clientY - rect.top) / el.clientHeight) * 2 + 1;
+
+      if (this.isDragging) {
+        const deltaX = e.clientX - this.previousMousePosition.x;
+        const deltaY = e.clientY - this.previousMousePosition.y;
+
+        this.targetRotation.y += deltaX * 0.005;
+        this.targetRotation.x += deltaY * 0.005;
+        this.targetRotation.x = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, this.targetRotation.x));
+
+        this.previousMousePosition = { x: e.clientX, y: e.clientY };
+      }
+
+      this.checkHotspotIntersection(e);
+    });
+
+    el.addEventListener("touchstart", e => {
+      if (e.touches.length === 1) {
+        this.isDragging = true;
+        this.previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+    }, { passive: true });
+
+    window.addEventListener("touchend", () => {
+      this.isDragging = false;
+    });
+
+    el.addEventListener("touchmove", e => {
+      if (this.isDragging && e.touches.length === 1) {
+        const deltaX = e.touches[0].clientX - this.previousMousePosition.x;
+        const deltaY = e.touches[0].clientY - this.previousMousePosition.y;
+
+        this.targetRotation.y += deltaX * 0.006;
+        this.targetRotation.x += deltaY * 0.006;
+        this.targetRotation.x = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, this.targetRotation.x));
+
+        this.previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+    }, { passive: true });
+
+    el.addEventListener("click", () => {
+      if (this.hoveredHotspot) {
+        spaceAudio.playRadarPing();
+        openArtifactModal(this.hoveredHotspot.userData.artifact.id);
+      }
+    });
+  }
+
+  checkHotspotIntersection(e) {
+    if (!this.tooltipEl) return;
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+    const intersects = this.raycaster.intersectObjects(this.hotspotObjects);
+
+    if (intersects.length > 0) {
+      const pin = intersects[0].object;
+      const group = pin.parent;
+      const artifact = group.userData.artifact;
+
+      this.hoveredHotspot = group;
+      this.container.style.cursor = "pointer";
+
+      const rect = this.container.getBoundingClientRect();
+      const isAr = document.body.getAttribute("dir") === "rtl";
+      this.tooltipEl.style.display = "block";
+      this.tooltipEl.style.left = `${e.clientX - rect.left + 15}px`;
+      this.tooltipEl.style.top = `${e.clientY - rect.top - 20}px`;
+      this.tooltipEl.innerHTML = `
+        <div class="font-display font-bold text-cyan-300 text-xs tracking-wider">${isAr ? artifact.arabicName : artifact.name}</div>
+        <div class="text-[10px] text-slate-400 font-mono-hud mt-0.5">COORD: ${artifact.coordinates}</div>
+        <div class="text-[9px] text-cyan-400/80 font-mono-hud uppercase mt-1">CLICK TO INTERCEPT TELEMETRY &rarr;</div>
+      `;
+    } else {
+      this.hoveredHotspot = null;
+      this.container.style.cursor = this.isDragging ? "grabbing" : "grab";
+      this.tooltipEl.style.display = "none";
+    }
+  }
+
+  onWindowResize() {
+    if (!this.container || !this.renderer || !this.camera) return;
+    const width = this.container.clientWidth;
+    const height = this.container.clientHeight;
+    this.camera.aspect = width / height;
+    this.camera.updateProjectionMatrix();
+    this.renderer.setSize(width, height);
+  }
+
+  animate() {
+    requestAnimationFrame(() => this.animate());
+
+    if (!this.isDragging) {
+      this.targetRotation.y += 0.0018;
+    }
+
+    this.currentRotation.x += (this.targetRotation.x - this.currentRotation.x) * 0.08;
+    this.currentRotation.y += (this.targetRotation.y - this.currentRotation.y) * 0.08;
+
+    if (this.planetMesh) {
+      this.planetMesh.rotation.x = this.currentRotation.x;
+      this.planetMesh.rotation.y = this.currentRotation.y;
+    }
+
+    const time = Date.now() * 0.003;
+    this.markerGroup.children.forEach(marker => {
+      if (marker.userData && marker.userData.ringMesh) {
+        const ring = marker.userData.ringMesh;
+        const scale = 1 + Math.sin(time) * 0.3;
+        ring.scale.set(scale, scale, 1);
+        ring.material.opacity = 0.5 + Math.sin(time) * 0.4;
+      }
+    });
+
+    if (this.renderer && this.scene && this.camera) {
+      this.renderer.render(this.scene, this.camera);
+    }
+  }
+}
+
+// ==========================================
+// 4. TACTICAL SURFACE RADAR CANVAS ENGINE
+// ==========================================
+class TacticalRadarScanner {
+  constructor(canvasId) {
+    this.canvas = document.getElementById(canvasId);
+    this.ctx = null;
+    this.sweepAngle = 0;
+    this.filterTarget = "all";
+    this.hoveredArtifact = null;
+    this.pulsePhase = 0;
+    this.mousePos = { x: -100, y: -100 };
+    this.zoomScale = 1;
+  }
+
+  init() {
+    if (!this.canvas) return;
+    this.ctx = this.canvas.getContext("2d");
+    this.resize();
+    window.addEventListener("resize", () => this.resize());
+
+    this.canvas.addEventListener("mousemove", e => {
+      const rect = this.canvas.getBoundingClientRect();
+      this.mousePos.x = e.clientX - rect.left;
+      this.mousePos.y = e.clientY - rect.top;
+      this.checkHover();
+    });
+
+    this.canvas.addEventListener("mouseleave", () => {
+      this.mousePos = { x: -100, y: -100 };
+      this.hoveredArtifact = null;
+    });
+
+    this.canvas.addEventListener("click", () => {
+      if (this.hoveredArtifact) {
+        spaceAudio.playRadarPing();
+        openArtifactModal(this.hoveredArtifact.id);
+      }
+    });
+
+    // Touch Support for Mobile
+    this.canvas.addEventListener("touchstart", e => {
+      if (e.touches.length === 1) {
+        const rect = this.canvas.getBoundingClientRect();
+        this.mousePos.x = e.touches[0].clientX - rect.left;
+        this.mousePos.y = e.touches[0].clientY - rect.top;
+        this.checkHover();
+        if (this.hoveredArtifact) {
+          spaceAudio.playRadarPing();
+          openArtifactModal(this.hoveredArtifact.id);
+        }
+      }
+    }, { passive: true });
+
+    this.render();
+  }
+
+  resize() {
+    if (!this.canvas) return;
+    const rect = this.canvas.parentElement.getBoundingClientRect();
+    const size = Math.min(rect.width, 680);
+    this.canvas.width = size * window.devicePixelRatio;
+    this.canvas.height = size * window.devicePixelRatio;
+    this.canvas.style.width = `${size}px`;
+    this.canvas.style.height = `${size}px`;
+    this.ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  }
+
+  setFilter(target) {
+    this.filterTarget = target;
+    spaceAudio.playClick();
+  }
+
+  checkHover() {
+    const size = parseFloat(this.canvas.style.width) || 500;
+    const centerX = size / 2;
+    const centerY = size / 2;
+    const maxRadius = (size / 2) * 0.85 * this.zoomScale;
+
+    const filtered = ARTIFACTS_DATA.filter(a => this.filterTarget === "all" || a.target === this.filterTarget);
+    let hit = null;
+
+    filtered.forEach(art => {
+      const px = centerX + (art.radarX - 0.5) * maxRadius * 2;
+      const py = centerY + (art.radarY - 0.5) * maxRadius * 2;
+
+      const dist = Math.hypot(this.mousePos.x - px, this.mousePos.y - py);
+      if (dist < 22) {
+        hit = art;
+      }
+    });
+
+    this.hoveredArtifact = hit;
+    this.canvas.style.cursor = hit ? "pointer" : "crosshair";
+
+    const liveCoordEl = document.getElementById("radar-live-coords");
+    if (liveCoordEl) {
+      if (hit) {
+        liveCoordEl.textContent = `TARGET LOCKED: ${hit.name} // [${hit.coordinates}]`;
+        liveCoordEl.className = "text-cyan-400 font-mono-hud font-bold animate-pulse";
+      } else {
+        const normLat = ((centerY - this.mousePos.y) / (size / 2) * 90).toFixed(2);
+        const normLon = ((this.mousePos.x - centerX) / (size / 2) * 180).toFixed(2);
+        liveCoordEl.textContent = `RADAR RETICLE: LAT ${normLat}° | LON ${normLon}°`;
+        liveCoordEl.className = "text-slate-400 font-mono-hud";
+      }
+    }
+  }
+
+  render() {
+    requestAnimationFrame(() => this.render());
+    if (!this.ctx || !this.canvas) return;
+
+    const size = parseFloat(this.canvas.style.width) || 500;
+    const centerX = size / 2;
+    const centerY = size / 2;
+    const maxRadius = (size / 2) * 0.88 * this.zoomScale;
+
+    this.ctx.clearRect(0, 0, size, size);
+
+    const bgGrad = this.ctx.createRadialGradient(centerX, centerY, 10, centerX, centerY, maxRadius);
+    bgGrad.addColorStop(0, "rgba(8, 20, 40, 0.85)");
+    bgGrad.addColorStop(0.85, "rgba(4, 12, 28, 0.95)");
+    bgGrad.addColorStop(1, "rgba(2, 6, 18, 0.98)");
+    this.ctx.fillStyle = bgGrad;
+    this.ctx.beginPath();
+    this.ctx.arc(centerX, centerY, maxRadius, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    const ringRadii = [0.25, 0.5, 0.75, 1.0];
+    const rangeLabels = ["100 KM", "250 KM", "500 KM", "1000 KM"];
+
+    ringRadii.forEach((ratio, idx) => {
+      const r = maxRadius * ratio;
+      this.ctx.strokeStyle = idx === ringRadii.length - 1 ? "rgba(6, 182, 212, 0.5)" : "rgba(6, 182, 212, 0.18)";
+      this.ctx.lineWidth = idx === ringRadii.length - 1 ? 1.5 : 1;
+      this.ctx.setLineDash(idx % 2 === 0 ? [] : [4, 4]);
+      this.ctx.beginPath();
+      this.ctx.arc(centerX, centerY, r, 0, Math.PI * 2);
+      this.ctx.stroke();
+
+      this.ctx.fillStyle = "rgba(100, 116, 139, 0.7)";
+      this.ctx.font = "9px 'JetBrains Mono', monospace";
+      this.ctx.fillText(rangeLabels[idx], centerX + 6, centerY - r + 12);
+    });
+    this.ctx.setLineDash([]);
+
+    this.ctx.strokeStyle = "rgba(6, 182, 212, 0.18)";
+    this.ctx.lineWidth = 1;
+    this.ctx.beginPath();
+    this.ctx.moveTo(centerX - maxRadius, centerY);
+    this.ctx.lineTo(centerX + maxRadius, centerY);
+    this.ctx.moveTo(centerX, centerY - maxRadius);
+    this.ctx.lineTo(centerX, centerY + maxRadius);
+    this.ctx.stroke();
+
+    this.ctx.strokeStyle = "rgba(34, 211, 238, 0.08)";
+    this.ctx.lineWidth = 1;
+    for (let i = 0; i < 4; i++) {
+      this.ctx.beginPath();
+      const topoR = maxRadius * (0.35 + i * 0.15);
+      for (let a = 0; a < Math.PI * 2; a += 0.2) {
+        const offset = Math.sin(a * 5 + i) * 12;
+        const tx = centerX + Math.cos(a) * (topoR + offset);
+        const ty = centerY + Math.sin(a) * (topoR + offset);
+        if (a === 0) this.ctx.moveTo(tx, ty);
+        else this.ctx.lineTo(tx, ty);
+      }
+      this.ctx.closePath();
+      this.ctx.stroke();
+    }
+
+    this.sweepAngle += 0.024;
+    if (this.sweepAngle >= Math.PI * 2) this.sweepAngle = 0;
+
+    const sweepGrad = this.ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, maxRadius);
+    sweepGrad.addColorStop(0, "rgba(6, 182, 212, 0)");
+    sweepGrad.addColorStop(1, "rgba(6, 182, 212, 0.22)");
+
+    this.ctx.save();
+    this.ctx.beginPath();
+    this.ctx.moveTo(centerX, centerY);
+    this.ctx.arc(centerX, centerY, maxRadius, this.sweepAngle - 0.45, this.sweepAngle);
+    this.ctx.closePath();
+    this.ctx.fillStyle = sweepGrad;
+    this.ctx.fill();
+
+    this.ctx.strokeStyle = "rgba(34, 211, 238, 0.85)";
+    this.ctx.lineWidth = 2;
+    this.ctx.beginPath();
+    this.ctx.moveTo(centerX, centerY);
+    this.ctx.lineTo(centerX + Math.cos(this.sweepAngle) * maxRadius, centerY + Math.sin(this.sweepAngle) * maxRadius);
+    this.ctx.stroke();
+    this.ctx.restore();
+
+    this.pulsePhase = (this.pulsePhase + 0.025) % 1;
+
+    const filtered = ARTIFACTS_DATA.filter(a => this.filterTarget === "all" || a.target === this.filterTarget);
+    const isAr = document.body.getAttribute("dir") === "rtl";
+
+    filtered.forEach(art => {
+      const px = centerX + (art.radarX - 0.5) * maxRadius * 2;
+      const py = centerY + (art.radarY - 0.5) * maxRadius * 2;
+      const isHovered = this.hoveredArtifact === art;
+
+      let colorCore = "#22d3ee";
+      let colorGlow = "rgba(6, 182, 212,";
+      if (art.target === "mars") {
+        colorCore = "#f97316";
+        colorGlow = "rgba(249, 115, 22,";
+      } else if (art.target === "deep-space") {
+        colorCore = "#a855f7";
+        colorGlow = "rgba(168, 85, 247,";
+      }
+
+      const pulseRadius = 6 + this.pulsePhase * 24;
+      const pulseAlpha = Math.max(0, 1 - this.pulsePhase);
+      this.ctx.strokeStyle = `${colorGlow} ${pulseAlpha * 0.7})`;
+      this.ctx.lineWidth = 1.5;
+      this.ctx.beginPath();
+      this.ctx.arc(px, py, pulseRadius, 0, Math.PI * 2);
+      this.ctx.stroke();
+
+      this.ctx.fillStyle = isHovered ? "#ffffff" : colorCore;
+      this.ctx.shadowColor = colorCore;
+      this.ctx.shadowBlur = isHovered ? 18 : 8;
+      this.ctx.beginPath();
+      this.ctx.arc(px, py, isHovered ? 6 : 4, 0, Math.PI * 2);
+      this.ctx.fill();
+      this.ctx.shadowBlur = 0;
+
+      this.ctx.fillStyle = isHovered ? "#ffffff" : "rgba(226, 232, 240, 0.85)";
+      this.ctx.font = isHovered ? "bold 11px 'JetBrains Mono', monospace" : "10px 'JetBrains Mono', monospace";
+      const displayName = isAr ? art.arabicName : art.name;
+      this.ctx.fillText(displayName, px + 10, py - 6);
+
+      this.ctx.fillStyle = "rgba(148, 163, 184, 0.65)";
+      this.ctx.font = "8px 'JetBrains Mono', monospace";
+      this.ctx.fillText(art.coordinates, px + 10, py + 6);
+
+      if (isHovered) {
+        this.ctx.strokeStyle = colorCore;
+        this.ctx.lineWidth = 1.5;
+        this.ctx.strokeRect(px - 10, py - 10, 20, 20);
+      }
+    });
+
+    if (this.mousePos.x > 0 && this.mousePos.y > 0) {
+      this.ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
+      this.ctx.lineWidth = 1;
+      this.ctx.beginPath();
+      this.ctx.arc(this.mousePos.x, this.mousePos.y, 8, 0, Math.PI * 2);
+      this.ctx.moveTo(this.mousePos.x - 12, this.mousePos.y);
+      this.ctx.lineTo(this.mousePos.x + 12, this.mousePos.y);
+      this.ctx.moveTo(this.mousePos.x, this.mousePos.y - 12);
+      this.ctx.lineTo(this.mousePos.x, this.mousePos.y + 12);
+      this.ctx.stroke();
+    }
+  }
+}
+
+// ==========================================
+// 5. DEEP SPACE STARFIELD BACKGROUND
+// ==========================================
+function initStarfield(canvasId) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+
+  let stars = [];
+  const starCount = 800;
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  resize();
+  window.addEventListener("resize", resize);
+
+  for (let i = 0; i < starCount; i++) {
+    stars.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      radius: Math.random() * 1.4 + 0.2,
+      alpha: Math.random() * 0.8 + 0.2,
+      twinkleSpeed: Math.random() * 0.02 + 0.005,
+      color: Math.random() > 0.85 ? "#38bdf8" : Math.random() > 0.92 ? "#f97316" : "#ffffff"
+    });
+  }
+
+  let meteor = null;
+  function spawnMeteor() {
+    meteor = {
+      x: Math.random() * canvas.width * 0.8,
+      y: Math.random() * canvas.height * 0.4,
+      length: Math.random() * 100 + 80,
+      speed: Math.random() * 12 + 10,
+      opacity: 1
+    };
+    setTimeout(spawnMeteor, Math.random() * 7000 + 4000);
+  }
+  spawnMeteor();
+
+  function animateStars() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const grad1 = ctx.createRadialGradient(canvas.width * 0.2, canvas.height * 0.3, 50, canvas.width * 0.2, canvas.height * 0.3, 600);
+    grad1.addColorStop(0, "rgba(14, 165, 233, 0.05)");
+    grad1.addColorStop(1, "transparent");
+    ctx.fillStyle = grad1;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const grad2 = ctx.createRadialGradient(canvas.width * 0.85, canvas.height * 0.7, 50, canvas.width * 0.85, canvas.height * 0.7, 700);
+    grad2.addColorStop(0, "rgba(168, 85, 247, 0.04)");
+    grad2.addColorStop(1, "transparent");
+    ctx.fillStyle = grad2;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    stars.forEach(s => {
+      s.alpha += s.twinkleSpeed;
+      if (s.alpha > 1 || s.alpha < 0.2) s.twinkleSpeed = -s.twinkleSpeed;
+
+      ctx.fillStyle = s.color;
+      ctx.globalAlpha = Math.max(0.1, Math.min(1, s.alpha));
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+
+    if (meteor) {
+      ctx.strokeStyle = `rgba(255, 255, 255, ${meteor.opacity})`;
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.moveTo(meteor.x, meteor.y);
+      ctx.lineTo(meteor.x - meteor.length, meteor.y + meteor.length * 0.5);
+      ctx.stroke();
+
+      meteor.x += meteor.speed;
+      meteor.y += meteor.speed * 0.5;
+      meteor.opacity -= 0.025;
+      if (meteor.opacity <= 0) meteor = null;
+    }
+
+    requestAnimationFrame(animateStars);
+  }
+
+  animateStars();
+}
+
+// ==========================================
+// 6. ARTIFACT DOSSIER MODAL & NARRATION
+// ==========================================
+let currentModalArtifact = null;
+
+function openArtifactModal(artifactId) {
+  const artifact = ARTIFACTS_DATA.find(a => a.id === artifactId);
+  if (!artifact) return;
+
+  currentModalArtifact = artifact;
+  const isAr = document.body.getAttribute("dir") === "rtl";
+  const modal = document.getElementById("artifact-modal");
+  const modalContent = document.getElementById("modal-card");
+
+  spaceAudio.playRadarPing();
+
+  document.getElementById("modal-target-badge").textContent = isAr ? artifact.targetLabelAr : artifact.targetLabel;
+  document.getElementById("modal-mission").textContent = artifact.mission;
+  document.getElementById("modal-title").textContent = isAr ? artifact.arabicName : artifact.name;
+  document.getElementById("modal-coords").textContent = artifact.coordinates;
+  document.getElementById("modal-site").textContent = artifact.site;
+  document.getElementById("modal-date").textContent = artifact.landingDate;
+  document.getElementById("modal-status").textContent = isAr ? artifact.statusAr : artifact.status;
+  document.getElementById("modal-mass").textContent = artifact.mass;
+  document.getElementById("modal-power").textContent = artifact.powerSource;
+  document.getElementById("modal-duration").textContent = artifact.distanceTraveled;
+  document.getElementById("modal-discovery").textContent = isAr ? artifact.primaryDiscoveryAr : artifact.primaryDiscovery;
+  document.getElementById("modal-heritage").textContent = artifact.heritageNotice;
+  document.getElementById("modal-freq").textContent = artifact.frequency;
+
+  const quoteText = isAr ? artifact.quoteAr : artifact.quote;
+  document.getElementById("modal-quote").textContent = `“${quoteText}”`;
+
+  const imgEl = document.getElementById("modal-image");
+  imgEl.src = artifact.image;
+  imgEl.alt = artifact.name;
+  imgEl.onerror = () => {
+    imgEl.src = getArtifactFallbackSvg(artifact.name, artifact.target);
+  };
+
+  const nasaLink = document.getElementById("modal-nasa-link");
+  nasaLink.href = `https://images.nasa.gov/details/${encodeURIComponent(artifact.nasaId)}`;
+
+  updateTimeElapsed(artifact.abandonedDate);
+
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
+  modalContent.classList.add("modal-animate-in");
+  document.body.style.overflow = "hidden";
+}
+
+function closeArtifactModal() {
+  spaceAudio.stopSpeaking();
+  spaceAudio.playClick();
+  const modal = document.getElementById("artifact-modal");
+  modal.classList.add("hidden");
+  modal.classList.remove("flex");
+  document.body.style.overflow = "auto";
+  currentModalArtifact = null;
+}
+
+function updateTimeElapsed(isoDate) {
+  const elapsedEl = document.getElementById("modal-time-elapsed");
+  if (!elapsedEl || !isoDate) return;
+
+  function calc() {
+    const start = new Date(isoDate).getTime();
+    const now = Date.now();
+    const diff = now - start;
+
+    const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
+    const days = Math.floor((diff % (1000 * 60 * 60 * 24 * 365.25)) / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+    const isAr = document.body.getAttribute("dir") === "rtl";
+    if (isAr) {
+      elapsedEl.textContent = `${years} سنة و ${days} يوم و ${hours} ساعة و ${minutes} دقيقة و ${seconds} ثانية في سكون الفضاء`;
+    } else {
+      elapsedEl.textContent = `${years}y ${days}d ${hours}h ${minutes}m ${seconds}s resting in cosmic silence`;
+    }
+  }
+
+  calc();
+}
+
+function transmitCurrentVoiceLog() {
+  if (!currentModalArtifact) return;
+  const isAr = document.body.getAttribute("dir") === "rtl";
+  const quote = isAr ? currentModalArtifact.quoteAr : currentModalArtifact.quote;
+
+  const btn = document.getElementById("btn-voice-transmit");
+  const waveVisualizer = document.getElementById("modal-soundwave");
+
+  if (spaceAudio.isSpeaking) {
+    spaceAudio.stopSpeaking();
+    btn.innerHTML = `<span class="inline-block w-2.5 h-2.5 rounded-full bg-cyan-400 mr-2"></span>${isAr ? "استمع إلى البث اللاسلكي" : "TRANSMIT RADIO LOG"}`;
+    waveVisualizer.classList.add("opacity-0");
+  } else {
+    btn.innerHTML = `<span class="inline-block w-2.5 h-2.5 rounded-full bg-red-500 animate-ping mr-2"></span>${isAr ? "جارٍ بث الإشارة..." : "RECEIVING TRANSMISSION..."}`;
+    waveVisualizer.classList.remove("opacity-0");
+
+    spaceAudio.speakStory(
+      quote,
+      isAr ? "ar" : "en",
+      () => {
+        waveVisualizer.classList.remove("opacity-0");
+      },
+      () => {
+        btn.innerHTML = `<span class="inline-block w-2.5 h-2.5 rounded-full bg-cyan-400 mr-2"></span>${isAr ? "استمع إلى البث اللاسلكي" : "TRANSMIT RADIO LOG"}`;
+        waveVisualizer.classList.add("opacity-0");
+      }
+    );
+  }
+}
+
+// Locate Artifact Directly on 3D Planet Globe and Scroll Up
+function locateArtifactOnGlobe(id) {
+  const artifact = ARTIFACTS_DATA.find(a => a.id === id);
+  if (!artifact) return;
+
+  closeArtifactModal();
+
+  if (window.planetEngine) {
+    window.planetEngine.focusArtifact(artifact);
+  }
+
+  const heroSection = document.getElementById("hero-section");
+  if (heroSection) {
+    heroSection.scrollIntoView({ behavior: "smooth" });
+  }
+
+  spaceAudio.playRadarPing();
+}
+
+// ==========================================
+// 7. ARTIFACTS CATALOG GRID RENDERER
+// ==========================================
+function renderArtifactCards(filter = "all") {
+  const container = document.getElementById("artifacts-grid");
+  if (!container) return;
+
+  container.innerHTML = "";
+  const isAr = document.body.getAttribute("dir") === "rtl";
+  const filtered = ARTIFACTS_DATA.filter(a => filter === "all" || a.target === filter);
+
+  filtered.forEach(art => {
+    const card = document.createElement("article");
+    const isMars = art.target === "mars";
+    const isDeep = art.target === "deep-space";
+
+    const borderColor = isMars ? "border-orange-500/30 hover:border-orange-400" : isDeep ? "border-purple-500/30 hover:border-purple-400" : "border-cyan-500/30 hover:border-cyan-400";
+    const tagBg = isMars ? "bg-orange-500/10 text-orange-400 border-orange-500/30" : isDeep ? "bg-purple-500/10 text-purple-400 border-purple-500/30" : "bg-cyan-500/10 text-cyan-400 border-cyan-500/30";
+
+    card.className = `glass-panel corner-brackets p-6 rounded-2xl flex flex-col justify-between transition-all duration-300 hover:-translate-y-2 group ${borderColor}`;
+
+    const fallback = getArtifactFallbackSvg(art.name, art.target);
+
+    card.innerHTML = `
+      <div>
+        <div class="flex items-center justify-between gap-2 mb-4">
+          <span class="text-[11px] font-mono-hud uppercase px-2.5 py-1 rounded-full border ${tagBg}">
+            ${isAr ? art.targetLabelAr : art.targetLabel}
+          </span>
+          <span class="text-[11px] font-mono-hud text-slate-400 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full ${isMars ? "bg-orange-500 animate-pulse" : "bg-cyan-400 animate-pulse"}"></span>
+            ${art.mission}
+          </span>
+        </div>
+
+        <div class="relative w-full h-48 rounded-xl overflow-hidden mb-5 bg-slate-950 border border-slate-800 group-hover:border-slate-700">
+          <img 
+            src="${art.image}" 
+            alt="${art.name}"
+            loading="lazy"
+            class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            onerror="this.src='${fallback}'"
+          />
+          <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80"></div>
+          <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between text-[11px] font-mono-hud text-slate-300">
+            <span>📍 ${art.coordinates}</span>
+            <span class="text-cyan-400">${art.landingDate.split(",")[1] || art.landingDate}</span>
+          </div>
+        </div>
+
+        <h3 class="text-xl font-display font-bold text-white mb-2 group-hover:text-cyan-300 transition-colors">
+          ${isAr ? art.arabicName : art.name}
+        </h3>
+        <p class="text-xs font-mono-hud text-slate-400 mb-4 flex items-center gap-2">
+          <span class="text-amber-400">⚡</span> ${isAr ? art.statusAr : art.status}
+        </p>
+
+        <blockquote class="text-sm text-slate-300 italic line-clamp-3 mb-6 border-l-2 ${isMars ? "border-orange-500" : "border-cyan-500"} pl-3 py-1">
+          "${isAr ? art.quoteAr : art.quote}"
+        </blockquote>
+      </div>
+
+      <div class="pt-4 border-t border-slate-800 flex flex-col gap-2">
+        <div class="flex items-center gap-2">
+          <button 
+            onclick="openArtifactModal('${art.id}')"
+            class="flex-1 py-2.5 px-3 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-mono-hud font-bold border border-cyan-500/30 hover:border-cyan-400 transition-all flex items-center justify-center gap-1.5"
+          >
+            <span>🔍</span> ${isAr ? "فحص السجل" : "INSPECT DOSSIER"}
+          </button>
+          <button 
+            onclick="quickPlayStory('${art.id}')"
+            title="${isAr ? "تشغيل البث الصوتي" : "Play Radio Dispatch"}"
+            class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-cyan-400 transition-all"
+          >
+            🎧
+          </button>
+        </div>
+        ${art.target !== 'deep-space' ? `
+          <button 
+            onclick="locateArtifactOnGlobe('${art.id}')"
+            class="w-full py-1.5 px-3 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-cyan-300 text-[11px] font-mono-hud border border-slate-800 hover:border-cyan-500/40 transition-all flex items-center justify-center gap-1.5"
+          >
+            <span>🛰️</span> ${isAr ? "تحديد الموقع على الكوكب 3D" : "LOCATE ON 3D GLOBE"}
+          </button>
+        ` : ''}
+      </div>
+    `;
+
+    container.appendChild(card);
+  });
+}
+
+function quickPlayStory(id) {
+  openArtifactModal(id);
+  setTimeout(transmitCurrentVoiceLog, 400);
+}
+
+// ==========================================
+// 8. LIVE NASA OPEN ARCHIVE SEARCH TERMINAL
+// ==========================================
+async function searchNasaApi(query) {
+  const inputEl = document.getElementById("nasa-search-input");
+  const searchQuery = query || (inputEl ? inputEl.value.trim() : "Apollo 11");
+  const statusEl = document.getElementById("nasa-search-status");
+  const resultsContainer = document.getElementById("nasa-results-grid");
+  const isAr = document.body.getAttribute("dir") === "rtl";
+
+  if (!searchQuery) return;
+
+  statusEl.innerHTML = `<span class="inline-block w-3 h-3 rounded-full bg-cyan-400 animate-ping mr-2"></span>${isAr ? "جارٍ الاتصال بأرشيف ناسا الفضائي..." : "ESTABLISHING UPLINK TO NASA IMAGE ARCHIVE..."}`;
+  resultsContainer.innerHTML = `
+    <div class="col-span-full py-12 flex flex-col items-center justify-center text-slate-400">
+      <div class="w-10 h-10 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin mb-4"></div>
+      <p class="font-mono-hud text-sm">${isAr ? "جارٍ استرجاع الصور والبيانات..." : "RECEIVING SATELLITE TELEMETRY..."}</p>
+    </div>
+  `;
+
+  const url = `https://images-api.nasa.gov/search?q=${encodeURIComponent(searchQuery)}&media_type=image&page_size=8`;
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`NASA Gateway Error: ${res.status}`);
+    const data = await res.json();
+    const items = data.collection?.items || [];
+
+    resultsContainer.innerHTML = "";
+
+    if (items.length === 0) {
+      statusEl.textContent = isAr ? "لم يتم العثور على نتائج لهذا البحث في أرشيف ناسا." : "ZERO TELEMETRY PACKETS MATCHED THIS QUERY IN NASA ARCHIVES.";
+      return;
+    }
+
+    statusEl.textContent = isAr 
+      ? `تم استرجاع ${items.length} صور موثقة من أرشيف وكالة ناسا المفتوح.`
+      : `DOWNLOADED ${items.length} HIGH-RES ARTIFACT RECORDS FROM NASA OPEN VAULT.`;
+
+    items.forEach(item => {
+      const info = item.data?.[0];
+      const preview = item.links?.find(l => l.render === "image");
+      if (!info || !preview) return;
+
+      const card = document.createElement("div");
+      card.className = "glass-panel p-4 rounded-xl flex flex-col justify-between border border-slate-800 hover:border-cyan-500/50 transition-all";
+
+      const title = info.title || "NASA Archived Specimen";
+      const desc = info.description || "No official telemetric description on file.";
+      const dateCreated = info.date_created ? new Date(info.date_created).toLocaleDateString() : "Archival";
+      const center = info.center || "NASA";
+
+      card.innerHTML = `
+        <div>
+          <div class="relative w-full h-44 rounded-lg overflow-hidden bg-slate-950 mb-3">
+            <img 
+              src="${preview.href}" 
+              alt="${title}"
+              loading="lazy"
+              class="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+            />
+            <span class="absolute top-2 right-2 text-[10px] font-mono-hud bg-slate-950/80 text-cyan-400 px-2 py-0.5 rounded border border-cyan-500/30">
+              ${center}
+            </span>
+          </div>
+          <h4 class="font-display font-bold text-white text-sm mb-1 line-clamp-2">${title}</h4>
+          <p class="text-[11px] font-mono-hud text-slate-400 mb-2">DATE: ${dateCreated}</p>
+          <p class="text-xs text-slate-300 line-clamp-3 mb-4 leading-relaxed">${desc}</p>
+        </div>
+        <div class="pt-3 border-t border-slate-800 flex items-center justify-between">
+          <a 
+            href="https://images.nasa.gov/details/${encodeURIComponent(info.nasa_id)}" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            class="text-xs font-mono-hud text-cyan-400 hover:text-cyan-300 flex items-center gap-1.5"
+          >
+            <span>🔗</span> ${isAr ? "عرض الأصل في ناسا" : "OFFICIAL ARCHIVE"}
+          </a>
+          <span class="text-[10px] font-mono-hud text-slate-500">${info.nasa_id}</span>
+        </div>
+      `;
+
+      resultsContainer.appendChild(card);
+    });
+  } catch (err) {
+    console.error(err);
+    statusEl.textContent = isAr ? "تعذّر الاتصال بخوادم ناسا. تحقق من اتصالك وحاول ثانية." : "TELEMETRY LINK OFFLINE. PLEASE CHECK CONNECTION.";
+    resultsContainer.innerHTML = "";
+  }
+}
+
+// ==========================================
+// 9. BILINGUAL LANGUAGE SYSTEM (EN / AR)
+// ==========================================
+function toggleLanguage() {
+  const currentDir = document.body.getAttribute("dir") || "ltr";
+  const newLang = currentDir === "rtl" ? "en" : "ar";
+  setLanguage(newLang);
+}
+
+function setLanguage(lang) {
+  const isAr = lang === "ar";
+  document.body.setAttribute("dir", isAr ? "rtl" : "ltr");
+  document.documentElement.lang = isAr ? "ar" : "en";
+
+  const langBtn = document.getElementById("lang-toggle-btn");
+  if (langBtn) {
+    langBtn.textContent = isAr ? "ENGLISH 🌐" : "العربية 🌐";
+  }
+
+  document.querySelectorAll("[data-i18n-en]").forEach(el => {
+    const textEn = el.getAttribute("data-i18n-en");
+    const textAr = el.getAttribute("data-i18n-ar");
+    el.textContent = isAr ? textAr : textEn;
+  });
+
+  if (window.planetEngine) {
+    window.planetEngine.updateTelemetryHUD(window.planetEngine.currentTarget);
+  }
+  renderArtifactCards(document.querySelector(".radar-filter-pill.active")?.dataset?.filter || "all");
+}
+
+// ==========================================
+// 10. GLOBAL INITIALIZATION & BOOTSTRAP
+// ==========================================
+document.addEventListener("DOMContentLoaded", () => {
+  initStarfield("starfield-canvas");
+
+  window.planetEngine = new Planet3DEngine("planet-canvas-container");
+  window.planetEngine.init();
+
+  window.radarScanner = new TacticalRadarScanner("radar-canvas");
+  window.radarScanner.init();
+
+  renderArtifactCards("all");
+
+  const audioBtn = document.getElementById("audio-toggle-btn");
+  if (audioBtn) {
+    audioBtn.addEventListener("click", () => {
+      const isPlaying = spaceAudio.toggleAmbient();
+      const isAr = document.body.getAttribute("dir") === "rtl";
+      const icon = document.getElementById("audio-icon");
+      const label = document.getElementById("audio-label");
+      const bars = document.getElementById("audio-visualizer-bars");
+
+      if (isPlaying) {
+        icon.textContent = "🔊";
+        label.textContent = isAr ? "الصوت المحيطي: نَشِط" : "AMBIENT AUDIO: ACTIVE";
+        bars.classList.remove("opacity-0");
+        audioBtn.classList.add("border-cyan-400", "bg-cyan-500/20");
+      } else {
+        icon.textContent = "🔇";
+        label.textContent = isAr ? "الصوت: صامت" : "AUDIO: MUTED";
+        bars.classList.add("opacity-0");
+        audioBtn.classList.remove("border-cyan-400", "bg-cyan-500/20");
+      }
+    });
+  }
+
+  const moonBtn = document.getElementById("btn-target-moon");
+  const marsBtn = document.getElementById("btn-target-mars");
+
+  if (moonBtn && marsBtn) {
+    moonBtn.addEventListener("click", () => {
+      moonBtn.classList.add("bg-cyan-500/30", "border-cyan-400", "text-cyan-300");
+      marsBtn.classList.remove("bg-orange-500/30", "border-orange-400", "text-orange-300");
+      marsBtn.classList.add("border-slate-700", "text-slate-400");
+      window.planetEngine.switchTarget("moon");
+    });
+
+    marsBtn.addEventListener("click", () => {
+      marsBtn.classList.add("bg-orange-500/30", "border-orange-400", "text-orange-300");
+      moonBtn.classList.remove("bg-cyan-500/30", "border-cyan-400", "text-cyan-300");
+      moonBtn.classList.add("border-slate-700", "text-slate-400");
+      window.planetEngine.switchTarget("mars");
+    });
+  }
+
+  document.querySelectorAll(".radar-filter-pill").forEach(pill => {
+    pill.addEventListener("click", () => {
+      document.querySelectorAll(".radar-filter-pill").forEach(p => {
+        p.classList.remove("active", "border-cyan-400", "text-cyan-300", "bg-cyan-500/20");
+        p.classList.add("border-slate-800", "text-slate-400");
+      });
+      pill.classList.add("active", "border-cyan-400", "text-cyan-300", "bg-cyan-500/20");
+      pill.classList.remove("border-slate-800", "text-slate-400");
+
+      const filter = pill.dataset.filter;
+      window.radarScanner.setFilter(filter);
+      renderArtifactCards(filter);
+    });
+  });
+
+  const zoomIn = document.getElementById("radar-zoom-in");
+  const zoomOut = document.getElementById("radar-zoom-out");
+  const zoomReset = document.getElementById("radar-zoom-reset");
+
+  if (zoomIn) zoomIn.addEventListener("click", () => { window.radarScanner.zoomScale = Math.min(2.0, window.radarScanner.zoomScale + 0.2); spaceAudio.playClick(); });
+  if (zoomOut) zoomOut.addEventListener("click", () => { window.radarScanner.zoomScale = Math.max(0.6, window.radarScanner.zoomScale - 0.2); spaceAudio.playClick(); });
+  if (zoomReset) zoomReset.addEventListener("click", () => { window.radarScanner.zoomScale = 1.0; spaceAudio.playClick(); });
+
+  searchNasaApi("lunar roving vehicle");
+
+  setInterval(() => {
+    const clockEl = document.getElementById("utc-mission-clock");
+    if (clockEl) {
+      const now = new Date();
+      clockEl.textContent = `${now.toUTCString().replace("GMT", "UTC")}`;
+    }
+  }, 1000);
+});
+
+</script>
+</body>
+</html>
